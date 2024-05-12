@@ -15,12 +15,12 @@ package org.openhab.binding.modbus.sunsynk.internal;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
- * The {@link modbus.sunsynkConfiguration} class contains fields mapping thing configuration parameters.
+ * The {@link SunsynkInverterConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author David Jones - Initial contribution
  */
 @NonNullByDefault
-public class modbus.sunsynkConfiguration {
+public class SunsynkInverterConfiguration {
 
     /**
      * Sample configuration parameters. Replace with your own.
@@ -28,4 +28,5 @@ public class modbus.sunsynkConfiguration {
     public String hostname = "";
     public String password = "";
     public int refreshInterval = 600;
+    public int pollInterval;
 }

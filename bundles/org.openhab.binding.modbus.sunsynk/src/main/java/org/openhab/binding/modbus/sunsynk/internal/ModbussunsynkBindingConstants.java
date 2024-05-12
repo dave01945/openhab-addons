@@ -16,19 +16,20 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
- * The {@link modbus.sunsynkBindingConstants} class defines common constants, which are
+ * The {@link ModbussunsynkBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
  * @author David Jones - Initial contribution
  */
 @NonNullByDefault
-public class modbus.sunsynkBindingConstants {
+public class ModbussunsynkBindingConstants {
 
-    private static final String BINDING_ID = "modbus.sunsynk";
+    private static final String BINDING_ID = "sunsynk-inverter";
 
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "sample");
+    public static final ThingTypeUID THING_TYPE_SUNSYNK_INVERTER = new ThingTypeUID(BINDING_ID, "sunsynk-inverter");
 
     // List of all Channel ids
-    public static final String CHANNEL_1 = "channel1";
+    public static final String PV_1_VOLTS = "pv_1_volts";
+    public static final String PV_1_CURRENT = "pv_1_current";
 }

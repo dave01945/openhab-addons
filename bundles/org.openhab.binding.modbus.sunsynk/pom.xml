@@ -13,5 +13,12 @@
   <artifactId>org.openhab.binding.modbus.sunsynk</artifactId>
 
   <name>openHAB Add-ons :: Bundles :: modbus.sunsynk Binding</name>
-
+  <dependencies>
+    <dependency>
+      <groupId>org.openhab.addons.bundles</groupId>
+      <artifactId>org.openhab.binding.modbus</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 </project>

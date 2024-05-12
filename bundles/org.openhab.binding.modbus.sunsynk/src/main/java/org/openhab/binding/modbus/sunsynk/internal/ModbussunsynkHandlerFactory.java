@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.modbus.sunsynk.internal;
 
-import static org.openhab.binding.modbus.sunsynk.internal.modbus.sunsynkBindingConstants.*;
+import static org.openhab.binding.modbus.sunsynk.internal.ModbussunsynkBindingConstants.*;
 
 import java.util.Set;
 
@@ -26,16 +26,16 @@ import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.annotations.Component;
 
 /**
- * The {@link modbus.sunsynkHandlerFactory} is responsible for creating things and thing
+ * The {@link ModbussunsynkHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author David Jones - Initial contribution
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.modbus.sunsynk", service = ThingHandlerFactory.class)
-public class modbus.sunsynkHandlerFactory extends BaseThingHandlerFactory {
+public class ModbussunsynkHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_SUNSYNK_INVERTER);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -46,8 +46,8 @@ public class modbus.sunsynkHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
-            return new modbus.sunsynkHandler(thing);
+        if (THING_TYPE_SUNSYNK_INVERTER.equals(thingTypeUID)) {
+            return new sunsynkHandler(thing);
         }
 
         return null;
