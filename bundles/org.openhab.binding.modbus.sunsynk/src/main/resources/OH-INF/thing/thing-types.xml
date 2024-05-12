@@ -27,7 +27,6 @@
 		<label>Overview</label>
 		<channels>
 			<channel id="ss-total-active-power" typeId="ss-total-active-power"/>
-			<channel id="ss-total-dc-power" typeId="ss-total-dc-power"/>
 			<channel id="ss-grid-voltage" typeId="ss-grid-voltage"/>
 			<channel id="ss-grid-power" typeId="ss-grid-power"/>
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
