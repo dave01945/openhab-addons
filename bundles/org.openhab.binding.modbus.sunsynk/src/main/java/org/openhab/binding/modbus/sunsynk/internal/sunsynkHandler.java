@@ -63,7 +63,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             return new ModbusReadRequestBlueprint( //
                     slaveId, //
-                    ModbusReadFunctionCode.READ_INPUT_REGISTERS, //
+                    ModbusReadFunctionCode.READ_MULTIPLE_REGISTERS, //
                     firstRegister - 1, //
                     length, //
                     TRIES //
