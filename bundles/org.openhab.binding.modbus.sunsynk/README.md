@@ -1,11 +1,8 @@
 # modbus.sunsynk Binding
 
-_Give some details about what this binding is meant for - a protocol, system, specific device._
+This binding intergrates sunsynk inverters with openhab through modbus.
 
-_If possible, provide some resources like pictures (only PNG is supported currently), a video, etc. to give an impression of what can be done with this binding._
-_You can place such resources into a `doc` folder next to this README.md._
 
-_Put each sentence in a separate line to improve readability of diffs._
 
 ## Supported Things
 

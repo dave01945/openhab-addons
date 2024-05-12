@@ -180,8 +180,8 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     private ChannelUID createChannelUid(SunsynkInverterRegisters register) {
         return new ChannelUID( //
                 thing.getUID(), //
-                "sg-" + register.getChannelGroup(), //
-                "sg-" + register.getChannelName() //
+                "ss-" + register.getChannelGroup(), //
+                "ss-" + register.getChannelName() //
         );
     }
 }

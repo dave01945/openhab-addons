@@ -34,6 +34,7 @@ final class ConversionConstants {
      */
     static final BigDecimal DIV_BY_TEN = new BigDecimal(BigInteger.ONE, 1);
     static final BigDecimal DIV_BY_HUNDRED = new BigDecimal(BigInteger.ONE, 2);
+    static final BigDecimal DIV_BY_THOU = new BigDecimal(BigInteger.ONE, 3);
 
     /**
      * Value conversion from Celsius to Kelvin.
