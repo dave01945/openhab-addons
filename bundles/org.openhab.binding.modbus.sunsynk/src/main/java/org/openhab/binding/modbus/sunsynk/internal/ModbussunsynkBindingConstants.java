@@ -13,6 +13,7 @@
 package org.openhab.binding.modbus.sunsynk.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.modbus.ModbusBindingConstants;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
@@ -24,12 +25,11 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class ModbussunsynkBindingConstants {
 
-    private static final String BINDING_ID = "sunsynk-inverter";
-
     // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SUNSYNK_INVERTER = new ThingTypeUID(BINDING_ID, "sunsynk-inverter");
+    public static final ThingTypeUID THING_TYPE_SUNSYNK_INVERTER = new ThingTypeUID(ModbusBindingConstants.BINDING_ID,
+            "sunsynk-inverter");
 
     // List of all Channel ids
-    public static final String PV_1_VOLTS = "pv_1_volts";
-    public static final String PV_1_CURRENT = "pv_1_current";
+    // public static final String PV_1_VOLTS = "pv_1_volts";
+    // public static final String PV_1_CURRENT = "pv_1_current";
 }
