@@ -90,7 +90,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         int currentRequestFirstRegister = 0;
 
         for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
-            logger.debug("Build request test- {}", channel.getChannelName());
+
             if (currentRequest.isEmpty()) {
                 currentRequest.add(channel);
                 currentRequestFirstRegister = channel.getRegisterNumber();
@@ -112,7 +112,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         if (!currentRequest.isEmpty()) {
             requests.add(new ModbusRequest(currentRequest, getSlaveId()));
         }
-        logger.debug("Created {} modbus request templates.", requests.size());
+        logger.debug("Created {} modbus request templates.", requests.toString());
         return requests;
     }
 
