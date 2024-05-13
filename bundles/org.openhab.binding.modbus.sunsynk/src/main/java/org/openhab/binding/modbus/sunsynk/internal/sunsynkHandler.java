@@ -140,7 +140,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             return;
         }
 
-        logger.debug("Modbus init test");
+        this.logger.error("Modbus init test");
 
         this.updateStatus(ThingStatus.UNKNOWN);
 
