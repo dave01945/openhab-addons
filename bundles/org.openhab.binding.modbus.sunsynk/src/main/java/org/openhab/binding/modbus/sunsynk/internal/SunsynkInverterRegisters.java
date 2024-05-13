@@ -32,8 +32,7 @@ import org.openhab.core.types.State;
 /**
  * The {@link SunsynkInverterRegisters} is responsible for defining Modbus registers and their units.
  *
- * @author Sönke Küper - Initial contribution
- * @author David Jones - Base copied from sungrow
+ * @author David Jones - Intial contribution
  */
 @NonNullByDefault
 public enum SunsynkInverterRegisters {

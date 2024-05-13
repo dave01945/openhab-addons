@@ -88,10 +88,9 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         final List<ModbusRequest> requests = new ArrayList<>();
         Deque<SunsynkInverterRegisters> currentRequest = new ArrayDeque<>();
         int currentRequestFirstRegister = 0;
-        logger.debug("Build request test");
 
         for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
-
+            logger.debug("Build request test- {}", channel.getChannelName());
             if (currentRequest.isEmpty()) {
                 currentRequest.add(channel);
                 currentRequestFirstRegister = channel.getRegisterNumber();
