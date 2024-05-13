@@ -73,7 +73,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
 
-    private static final int TRIES = 1;
+    private static final int TRIES = 3;
     private List<ModbusRequest> modbusRequests = new ArrayList<>();
     private @Nullable SunsynkInverterConfiguration config;
 
@@ -141,14 +141,9 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
         this.updateStatus(ThingStatus.UNKNOWN);
 
-        logger.debug("Build test");
-
         this.modbusRequests = this.buildRequests();
 
-        logger.debug("Built test");
-
         for (ModbusRequest request : modbusRequests) {
-            logger.debug("Req test - {}", config.pollInterval);
             logger.debug("Req blue test - {}", request.blueprint.toString());
             registerRegularPoll( //
                     request.blueprint, //
