@@ -148,7 +148,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         logger.debug("Built test");
 
         for (ModbusRequest request : modbusRequests) {
-            logger.debug("Req test - {}", request.toString());
+            logger.debug("Req test - {}", config.pollInterval);
             registerRegularPoll( //
                     request.blueprint, //
                     config.pollInterval, //
