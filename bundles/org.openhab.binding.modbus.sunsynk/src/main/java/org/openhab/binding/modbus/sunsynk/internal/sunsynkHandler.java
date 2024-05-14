@@ -144,7 +144,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         this.modbusRequests = this.buildRequests();
 
         for (ModbusRequest request : modbusRequests) {
-            logger.debug("Req blue test - {}", request.blueprint.toString());
             registerRegularPoll( //
                     request.blueprint, //
                     config.pollInterval, //
@@ -165,7 +164,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-                logger.debug("For test - {}", index);
+                logger.debug("For test - {} - {}", index, firstRegister);
                 ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
                         .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
             }
