@@ -97,7 +97,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             } else {
                 int sizeWithRegisterAdded = channel.getRegisterNumber() - currentRequestFirstRegister
                         + channel.getRegisterCount();
-                logger.debug("Build test - {} - {}", sizeWithRegisterAdded, channel.getChannelName());
+                logger.debug("Build test - {} - {}", channel.getRegisterNumber(), channel.getRegisterCount());
                 if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT) {
                     requests.add(new ModbusRequest(currentRequest, getSlaveId()));
                     currentRequest = new ArrayDeque<>();
