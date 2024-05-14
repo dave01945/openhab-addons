@@ -173,7 +173,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     }
 
     private void readError(AsyncModbusFailure<ModbusReadRequestBlueprint> error) {
-        this.logger.debug("Failed to get modbus data - {}", error.getCause().getMessage());
+        this.logger.debug("Failed to get modbus data - {}", error.getRequest().toString());
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 "Failed to retrieve data: " + error.getCause().getMessage());
     }
