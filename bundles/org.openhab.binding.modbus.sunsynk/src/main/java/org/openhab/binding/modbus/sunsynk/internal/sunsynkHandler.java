@@ -64,7 +64,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             return new ModbusReadRequestBlueprint( //
                     slaveId, //
                     ModbusReadFunctionCode.READ_MULTIPLE_REGISTERS, //
-                    firstRegister - 1, //
+                    firstRegister, //
                     length, //
                     TRIES //
             );
@@ -97,7 +97,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             } else {
                 int sizeWithRegisterAdded = channel.getRegisterNumber() - currentRequestFirstRegister
                         + channel.getRegisterCount();
-                logger.debug("Build test - {} - {}", channel.getRegisterNumber(), sizeWithRegisterAdded);
                 if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT) {
                     requests.add(new ModbusRequest(currentRequest, getSlaveId()));
                     currentRequest = new ArrayDeque<>();
@@ -113,7 +112,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         if (!currentRequest.isEmpty()) {
             requests.add(new ModbusRequest(currentRequest, getSlaveId()));
         }
-        logger.debug("Created {} modbus request templates.", requests.toString());
+        logger.debug("Created {} modbus request templates.", requests.size());
         return requests;
     }
 
@@ -161,12 +160,12 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             if (getThing().getStatus() != ThingStatus.ONLINE) {
                 updateStatus(ThingStatus.ONLINE);
             }
-
+            logger.debug("Read test - {}", result.getRequest().toString());
             int firstRegister = request.registers.getFirst().getRegisterNumber();
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-
+                logger.debug("For test - {}", index);
                 ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
                         .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
             }
