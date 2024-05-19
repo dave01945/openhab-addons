@@ -25,11 +25,6 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class ModbussunsynkBindingConstants {
 
-    // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_SUNSYNK_INVERTER = new ThingTypeUID(ModbusBindingConstants.BINDING_ID,
             "sunsynk-inverter");
-
-    // List of all Channel ids
-    // public static final String PV_1_VOLTS = "pv_1_volts";
-    // public static final String PV_1_CURRENT = "pv_1_current";
 }

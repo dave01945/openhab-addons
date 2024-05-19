@@ -1,0 +1,3 @@
+Total active enrgy - unsure what it is
+Daily active enrgy - currently broken
+Total import energy - requires new method as bytes in register are split
