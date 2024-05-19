@@ -33,6 +33,7 @@ final class ConversionConstants {
      * Multiplicand for 0.1.
      */
     static final BigDecimal DIV_BY_TEN = new BigDecimal(BigInteger.ONE, 1);
+    static final BigDecimal DIV_BY_TEMP_TEN = new BigDecimal((BigInteger.ONE - 1000), 1);
     static final BigDecimal DIV_BY_HUNDRED = new BigDecimal(BigInteger.ONE, 2);
     static final BigDecimal DIV_BY_THOU = new BigDecimal(BigInteger.ONE, 3);
 

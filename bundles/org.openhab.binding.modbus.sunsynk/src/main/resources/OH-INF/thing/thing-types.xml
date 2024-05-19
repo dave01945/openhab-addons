@@ -73,7 +73,7 @@
 		<channels>
 			<channel id="ss-daily-import-energy" typeId="ss-daily-import-energy"/>
 			<channel id="ss-total-import-energy" typeId="ss-total-import-energy"/>
-			<channel id="ss-daily-grid-export-power" typeId="ss-daily-grid-export-power"/>
+			<channel id="ss-daily-grid-export-energy" typeId="ss-daily-grid-export-energy"/>
 			<channel id="ss-total-grid-export-energy" typeId="ss-total-grid-export-energy"/>
 			<channel id="ss-monthly-grid-energy" typeId="ss-monthly-grid-energy"/>
 			<channel id="ss-year-grid-export-energy" typeId="ss-year-grid-export-energy"/>
@@ -106,7 +106,7 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-type id="ss-internal-ac-temperature" >
+	<channel-type id="ss-internal-ac-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Internal AC Temperature</label>
 		<category>Temperature</category>
@@ -114,9 +114,9 @@
 			<tag>Measurement</tag>
 			<tag>Temperature</tag>
 		</tags>
-		<state pattern="%.2f %unit%" readOnly="true"/>
+		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-internal-dc-temperature" >
+	<channel-type id="ss-internal-dc-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Internal DC Temperature</label>
 		<category>Temperature</category>
@@ -126,7 +126,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-external-temperature" >
+	<channel-type id="ss-external-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>External Temperature</label>
 		<category>Temperature</category>
@@ -136,7 +136,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt1-voltage" >
+	<channel-type id="ss-mppt1-voltage">
 		<item-type>Number:ElectricPotential</item-type>
 		<label>MPPT1 Voltage</label>
 		<category>Energy</category>
@@ -146,7 +146,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt1-current" >
+	<channel-type id="ss-mppt1-current">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>MPPT1 Current</label>
 		<category>Energy</category>
@@ -156,7 +156,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt1-power" >
+	<channel-type id="ss-mppt1-power">
 		<item-type>Number:Power</item-type>
 		<label>MPPT1 Power</label>
 		<category>Energy</category>
@@ -166,7 +166,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt2-voltage" >
+	<channel-type id="ss-mppt2-voltage">
 		<item-type>Number:ElectricPotential</item-type>
 		<label>MPPT2 Voltage</label>
 		<category>Energy</category>
@@ -176,7 +176,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt2-current" >
+	<channel-type id="ss-mppt2-current">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>MPPT2 Current</label>
 		<category>Energy</category>
@@ -186,7 +186,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-pv-energy" >
+	<channel-type id="ss-monthly-pv-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly PV Energy</label>
 		<category>Energy</category>
@@ -196,7 +196,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-load-energy" >
+	<channel-type id="ss-monthly-load-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly Load Energy</label>
 		<category>Energy</category>
@@ -206,7 +206,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-grid-energy" >
+	<channel-type id="ss-monthly-grid-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly Grid Energy</label>
 		<category>Energy</category>
@@ -216,7 +216,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-grid-export-energy" >
+	<channel-type id="ss-year-grid-export-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly Grid Export Energy</label>
 		<category>Energy</category>
@@ -226,7 +226,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-pv-energy" >
+	<channel-type id="ss-year-pv-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly PV Energy</label>
 		<category>Energy</category>
@@ -236,7 +236,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-load-energy" >
+	<channel-type id="ss-year-load-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly Load Energy</label>
 		<category>Energy</category>
@@ -246,7 +246,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-mppt2-power" >
+	<channel-type id="ss-mppt2-power">
 		<item-type>Number:Power</item-type>
 		<label>MPPT2 Power</label>
 		<category>Energy</category>
@@ -256,7 +256,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-voltage" >
+	<channel-type id="ss-grid-voltage">
 		<item-type>Number:ElectricPotential</item-type>
 		<label>Grid Voltage</label>
 		<category>Energy</category>
@@ -276,7 +276,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-rated-power" >
+	<channel-type id="ss-rated-power">
 		<item-type>Number:Power</item-type>
 		<label>Rated Power</label>
 		<category>Energy</category>
@@ -286,7 +286,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-ct-power" >
+	<channel-type id="ss-grid-ct-power">
 		<item-type>Number:Power</item-type>
 		<label>Grid CT Power</label>
 		<category>Energy</category>
@@ -296,7 +296,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-frequency" >
+	<channel-type id="ss-grid-frequency">
 		<item-type>Number:Frequency</item-type>
 		<label>Grid Frequency</label>
 		<tags>
@@ -326,7 +326,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-grid-export-power">
+	<channel-type id="ss-daily-grid-export-energy">
 		<item-type>Number:Power</item-type>
 		<label>Daily Grid Export Power</label>
 		<category>Energy</category>
@@ -436,7 +436,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-voltage" >
+	<channel-type id="ss-battery-voltage">
 		<item-type>Number:ElectricPotential</item-type>
 		<label>Battery Voltage</label>
 		<category>Energy</category>
@@ -446,7 +446,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-current" >
+	<channel-type id="ss-battery-current">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Current</label>
 		<category>Energy</category>
@@ -526,7 +526,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-current" >
+	<channel-type id="ss-grid-current">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>Grid Current</label>
 		<category>Energy</category>

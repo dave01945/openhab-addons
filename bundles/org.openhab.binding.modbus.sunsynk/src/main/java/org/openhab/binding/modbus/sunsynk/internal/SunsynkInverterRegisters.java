@@ -37,12 +37,12 @@ import org.openhab.core.types.State;
 @NonNullByDefault
 public enum SunsynkInverterRegisters {
 
-
     RATED_POWER(16, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.WATT), "overview"),
     DAILY_ACTIVE_ENERGY(60, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     TOTAL_ACTIVE_ENERGY(63, INT32_SWAP, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
-    MONTHLY_PV_ENERGY(65, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
-    MONTHLY_LOAD_ENERGY(66, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "load-information"),
+    MONTHLY_PV_ENERGY(65, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "mppt-information"),
+    MONTHLY_LOAD_ENERGY(66, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+            "load-information"),
     MONTHLY_GRID_ENERGY(67, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     YEAR_PV_ENERGY(68, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "mppt-information"),
@@ -69,9 +69,9 @@ public enum SunsynkInverterRegisters {
             "load-information"),
     YEAR_LOAD_ENERGY(87, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "load-information"),
-    INTERNAL_DC_TEMPERATURE(90, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
-    INTERNAL_AC_TEMPERATURE(91, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
-    EXTERNAL_TEMPERATURE(95, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
+    INTERNAL_DC_TEMPERATURE(90, UINT16, ConversionConstants.DIV_BY_TEMP_TEN, quantityFactory(Units.KELVIN), "overview"),
+    INTERNAL_AC_TEMPERATURE(91, UINT16, ConversionConstants.DIV_BY_TEMP_TEN, quantityFactory(Units.KELVIN), "overview"),
+    EXTERNAL_TEMPERATURE(95, UINT16, ConversionConstants.DIV_BY_TEMP_TEN, quantityFactory(Units.KELVIN), "overview"),
     TOTAL_PV_GENERATION(96, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "overview"),
     YEAR_GRID_EXPORT_ENERGY(98, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
@@ -89,7 +89,7 @@ public enum SunsynkInverterRegisters {
     GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
     INVERTER_POWER(175, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "inverter"),
     LOAD_POWER(178, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
-    BATTERY_TEMPERATURE(182, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN),
+    BATTERY_TEMPERATURE(182, UINT16, ConversionConstants.DIV_BY_TEMP_TEN, quantityFactory(Units.KELVIN),
             ConversionConstants.CELSIUS_TO_KELVIN, "battery-information"),
     BATTERY_VOLTAGE(183, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
             "battery-information"),
