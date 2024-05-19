@@ -61,14 +61,14 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             int firstRegister = registers.getFirst().getRegisterNumber();
             int lastRegister = registers.getLast().getRegisterNumber();
             int length = lastRegister - firstRegister + registers.getLast().getRegisterCount();
-            this.logger.debug("Test init read {} - {} - {}", firstRegister, lastRegister,
-                    registers.getLast().getRegisterCount());
+            this.logger.debug("Test init read {} - {} - {} - {}", firstRegister, lastRegister,
+                    registers.getLast().getRegisterCount(), length);
             assert length <= ModbusConstants.MAX_REGISTERS_READ_COUNT;
 
             return new ModbusReadRequestBlueprint( //
                     slaveId, //
                     ModbusReadFunctionCode.READ_MULTIPLE_REGISTERS, //
-                    firstRegister - 1, //
+                    firstRegister, //
                     length, //
                     TRIES //
             );
@@ -163,7 +163,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             if (getThing().getStatus() != ThingStatus.ONLINE) {
                 updateStatus(ThingStatus.ONLINE);
             }
-            logger.debug("Read test - {}", result.getRequest().toString());
+            logger.debug("Read test - {}", result.toString());
             int firstRegister = request.registers.getFirst().getRegisterNumber();
 
             for (SunsynkInverterRegisters channel : request.registers) {
