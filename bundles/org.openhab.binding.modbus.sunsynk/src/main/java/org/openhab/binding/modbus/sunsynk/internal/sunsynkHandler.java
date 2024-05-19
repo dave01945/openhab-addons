@@ -50,8 +50,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         private final Deque<SunsynkInverterRegisters> registers;
         private final ModbusReadRequestBlueprint blueprint;
 
-        private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
-
         public ModbusRequest(Deque<SunsynkInverterRegisters> registers, int slaveId) {
             this.registers = registers;
             this.blueprint = initReadRequest(registers, slaveId);
@@ -61,8 +59,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             int firstRegister = registers.getFirst().getRegisterNumber();
             int lastRegister = registers.getLast().getRegisterNumber();
             int length = lastRegister - firstRegister + registers.getLast().getRegisterCount();
-            this.logger.debug("Test init read {} - {} - {} - {}", firstRegister, lastRegister,
-                    registers.getLast().getRegisterCount(), length);
+
             assert length <= ModbusConstants.MAX_REGISTERS_READ_COUNT;
 
             return new ModbusReadRequestBlueprint( //
@@ -168,7 +165,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-                logger.debug("For test - {} - {}", index, firstRegister);
+                logger.debug("For test - {} - {}", channel.getChannelName(), channel.getType());
                 ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
                         .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
             }
