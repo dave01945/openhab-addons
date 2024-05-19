@@ -33,7 +33,6 @@ final class ConversionConstants {
      * Multiplicand for 0.1.
      */
     static final BigDecimal DIV_BY_TEN = new BigDecimal(BigInteger.ONE, 1);
-    static final BigDecimal DIV_BY_TEMP_TEN = new BigDecimal((BigInteger.ONE - 1000), 1);
     static final BigDecimal DIV_BY_HUNDRED = new BigDecimal(BigInteger.ONE, 2);
     static final BigDecimal DIV_BY_THOU = new BigDecimal(BigInteger.ONE, 3);
 
@@ -42,4 +41,7 @@ final class ConversionConstants {
      */
     static final Function<BigDecimal, BigDecimal> CELSIUS_TO_KELVIN = (BigDecimal celsius) -> celsius
             .add(new BigDecimal(273.15f));
+
+    static final Function<BigDecimal, BigDecimal> DIV_BY_TEMP_TEN = (BigDecimal temp) -> temp
+            .subtract(new BigDecimal(1000)).divide(new BigDecimal(10)).add(new BigDecimal(273.15f));
 }

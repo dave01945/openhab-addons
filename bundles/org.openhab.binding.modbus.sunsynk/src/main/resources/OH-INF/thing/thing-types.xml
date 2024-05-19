@@ -27,11 +27,9 @@
 	<channel-group-type id="ss-overview">
 		<label>Overview</label>
 		<channels>
-			<channel id="ss-total-active-energy" typeId="ss-total-active-energy"/>
 			<channel id="ss-daily-active-energy" typeId="ss-daily-active-energy"/>
+			<channel id="ss-total-active-energy" typeId="ss-total-active-energy"/>
 			<channel id="ss-rated-power" typeId="ss-rated-power"/>
-			<channel id="ss-daily-pv-generation" typeId="ss-daily-pv-generation"/>
-			<channel id="ss-total-pv-generation" typeId="ss-total-pv-generation"/>
 			<channel id="ss-internal-ac-temperature" typeId="ss-internal-ac-temperature"/>
 			<channel id="ss-internal-dc-temperature" typeId="ss-internal-dc-temperature"/>
 			<channel id="ss-external-temperature" typeId="ss-external-temperature"/>
@@ -45,8 +43,10 @@
 			<channel id="ss-mppt1-current" typeId="ss-mppt1-current"/>
 			<channel id="ss-mppt2-voltage" typeId="ss-mppt2-voltage"/>
 			<channel id="ss-mppt2-current" typeId="ss-mppt2-current"/>
+			<channel id="ss-daily-pv-generation" typeId="ss-daily-pv-generation"/>
 			<channel id="ss-monthly-pv-energy" typeId="ss-monthly-pv-energy"/>
 			<channel id="ss-year-pv-energy" typeId="ss-year-pv-energy"/>
+			<channel id="ss-total-pv-generation" typeId="ss-total-pv-generation"/>
 		</channels>
 	</channel-group-type>
 
@@ -60,8 +60,8 @@
 			<channel id="ss-battery-soc" typeId="ss-battery-soc"/>
 			<channel id="ss-battery-temperature" typeId="ss-battery-temperature"/>
 			<channel id="ss-daily-battery-charge" typeId="ss-daily-battery-charge"/>
-			<channel id="ss-total-battery-charge" typeId="ss-total-battery-charge"/>
 			<channel id="ss-daily-battery-discharge-energy" typeId="ss-daily-battery-discharge-energy"/>
+			<channel id="ss-total-battery-charge" typeId="ss-total-battery-charge"/>
 			<channel id="ss-total-battery-discharge-energy" typeId="ss-total-battery-discharge-energy"/>
 			<channel id="ss-total-battery-charge-limit" typeId="ss-battery-charge-limit"/>
 			<channel id="ss-total-battery-discharge-limit" typeId="ss-battery-discharge-limit"/>
@@ -71,17 +71,17 @@
 	<channel-group-type id="ss-grid-information">
 		<label>Grid Information</label>
 		<channels>
-			<channel id="ss-daily-import-energy" typeId="ss-daily-import-energy"/>
-			<channel id="ss-total-import-energy" typeId="ss-total-import-energy"/>
-			<channel id="ss-daily-grid-export-energy" typeId="ss-daily-grid-export-energy"/>
-			<channel id="ss-total-grid-export-energy" typeId="ss-total-grid-export-energy"/>
-			<channel id="ss-monthly-grid-energy" typeId="ss-monthly-grid-energy"/>
-			<channel id="ss-year-grid-export-energy" typeId="ss-year-grid-export-energy"/>
 			<channel id="ss-grid-state" typeId="ss-grid-state"/>
 			<channel id="ss-grid-voltage" typeId="ss-grid-voltage"/>
 			<channel id="ss-grid-power" typeId="ss-grid-power"/>
 			<channel id="ss-grid-ct-power" typeId="ss-grid-ct-power"/>
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
+			<channel id="ss-daily-import-energy" typeId="ss-daily-import-energy"/>
+			<channel id="ss-daily-grid-export-energy" typeId="ss-daily-grid-export-energy"/>
+			<channel id="ss-monthly-grid-energy" typeId="ss-monthly-grid-energy"/>
+			<channel id="ss-year-grid-export-energy" typeId="ss-year-grid-export-energy"/>
+			<channel id="ss-total-import-energy" typeId="ss-total-import-energy"/>
+			<channel id="ss-total-grid-export-energy" typeId="ss-total-grid-export-energy"/>
 		</channels>
 	</channel-group-type>
 
@@ -90,9 +90,9 @@
 		<channels>
 			<channel id="ss-load-power" typeId="ss-load-power"/>
 			<channel id="ss-daily-load-energy-consumption" typeId="ss-daily-load-energy-consumption"/>
-			<channel id="ss-total-load-energy-consumption" typeId="ss-total-load-energy-consumption"/>
 			<channel id="ss-monthly-load-energy" typeId="ss-monthly-load-energy"/>
 			<channel id="ss-year-load-energy" typeId="ss-year-load-energy"/>
+			<channel id="ss-total-load-energy-consumption" typeId="ss-total-load-energy-consumption"/>
 		</channels>
 	</channel-group-type>
 
