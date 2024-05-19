@@ -50,6 +50,8 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         private final Deque<SunsynkInverterRegisters> registers;
         private final ModbusReadRequestBlueprint blueprint;
 
+        private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
+
         public ModbusRequest(Deque<SunsynkInverterRegisters> registers, int slaveId) {
             this.registers = registers;
             this.blueprint = initReadRequest(registers, slaveId);
@@ -59,12 +61,14 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             int firstRegister = registers.getFirst().getRegisterNumber();
             int lastRegister = registers.getLast().getRegisterNumber();
             int length = lastRegister - firstRegister + registers.getLast().getRegisterCount();
+            this.logger.debug("Test init read {} - {} - {}", firstRegister, lastRegister,
+                    registers.getLast().getRegisterCount());
             assert length <= ModbusConstants.MAX_REGISTERS_READ_COUNT;
 
             return new ModbusReadRequestBlueprint( //
                     slaveId, //
                     ModbusReadFunctionCode.READ_MULTIPLE_REGISTERS, //
-                    firstRegister, //
+                    firstRegister - 1, //
                     length, //
                     TRIES //
             );
