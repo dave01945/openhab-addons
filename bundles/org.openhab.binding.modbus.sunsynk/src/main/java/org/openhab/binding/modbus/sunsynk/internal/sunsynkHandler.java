@@ -98,7 +98,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             } else {
                 int sizeWithRegisterAdded = channel.getRegisterNumber() - currentRequestFirstRegister
                         + channel.getRegisterCount();
-                if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT) {
+                if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT - 5) {
                     requests.add(new ModbusRequest(currentRequest, getSlaveId()));
                     currentRequest = new ArrayDeque<>();
 
@@ -160,12 +160,10 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             if (getThing().getStatus() != ThingStatus.ONLINE) {
                 updateStatus(ThingStatus.ONLINE);
             }
-            logger.debug("Read test - {}", result.toString());
             int firstRegister = request.registers.getFirst().getRegisterNumber();
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-                logger.debug("For test - {} - {}", channel.getChannelName(), channel.getType());
                 ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
                         .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
             }
@@ -173,7 +171,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     }
 
     private void readError(AsyncModbusFailure<ModbusReadRequestBlueprint> error) {
-        this.logger.debug("Failed to get modbus data - {}", error.getRequest().toString());
+        this.logger.debug("Failed to get modbus data - {}", error.getCause().getMessage());
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                 "Failed to retrieve data: " + error.getCause().getMessage());
     }

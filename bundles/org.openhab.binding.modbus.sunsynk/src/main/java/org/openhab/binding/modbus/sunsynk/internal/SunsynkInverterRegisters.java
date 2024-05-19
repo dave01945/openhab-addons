@@ -37,9 +37,17 @@ import org.openhab.core.types.State;
 @NonNullByDefault
 public enum SunsynkInverterRegisters {
 
-    // the following register numbers are 1-based. They need to be converted before sending them on the wire.
+    // the following register numbers are 1-based. They need to be converted before sending them on the wire. 
 
-    TOTAL_ACTIVE_POWER(63, INT32_SWAP, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
+    RATED_POWER(16, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.WATT),
+            "overview"),
+    DAILY_ACTIVE_ENERGY(60, INT32_SWAP, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    TOTAL_ACTIVE_ENERGY(63, INT32_SWAP, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    MONTHLY_PV_ENERGY(65, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    MONTHLY_LOAD_ENERGY(66, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    MONTHLY_GRID_ENERGY(67, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    YEAR_PV_ENERGY(68, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+            "mppt-information"),
     DAILY_BATTERY_CHARGE(70, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "battery-information"),
     DAILY_BATTERY_DISCHARGE_ENERGY(71, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
@@ -61,20 +69,28 @@ public enum SunsynkInverterRegisters {
             "load-information"),
     TOTAL_LOAD_ENERGY_CONSUMPTION(85, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "load-information"),
+    YEAR_LOAD_ENERGY(87, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+            "load-information"),
     INTERNAL_DC_TEMPERATURE(90, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
     INTERNAL_AC_TEMPERATURE(91, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
     POWER_FACTOR(93, INT16, ConversionConstants.DIV_BY_THOU, quantityFactory(Units.VAR), "overview"),
     EXTERNAL_TEMPERATURE(95, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN), "overview"),
     TOTAL_PV_GENERATION(96, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "overview"),
+    YEAR_GRID_EXPORT_ENERGY(98, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+            "grid-information"),
     DAILY_PV_GENERATION(108, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     MPPT1_VOLTAGE(109, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
     MPPT1_CURRENT(110, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     MPPT2_VOLTAGE(111, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
     MPPT2_CURRENT(112, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     GRID_VOLTAGE(150, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "overview"),
+    INVERTER_VOLTAGE(154, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "inverter"),
     GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "overview"),
+    INVERTER_CURRENT(164, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "inverter"),
     GRID_POWER(169, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
+    GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
+    INVERTER_POWER(174, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "inverter"),
     LOAD_POWER(178, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
     BATTERY_TEMPERATURE(182, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KELVIN),
             ConversionConstants.CELSIUS_TO_KELVIN, "battery-information"),
@@ -86,7 +102,12 @@ public enum SunsynkInverterRegisters {
     BATTERY_POWER(190, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "battery-information"),
     BATTERY_CURRENT(191, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
             "battery-information"),
-    GRID_STATE(194, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "grid-information");
+    INVERTER_FREQUENCY(193, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ), "inverter"),
+    GRID_STATE(194, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "grid-information"),
+    BATTERY_CHARGE_LIMIT(314, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
+            "battery-information"),
+    BATTERY_DISCHARGE_LIMIT(315, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
+            "battery-information");
 
     private final BigDecimal multiplier;
     private final int registerNumber;
