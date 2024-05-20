@@ -16,6 +16,7 @@ import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.INT
 import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.INT32_SWAP;
 import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.UINT16;
 import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.UINT32_SWAP;
+import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.UINT64_SWAP;
 
 import java.math.BigDecimal;
 import java.util.function.Function;
@@ -39,6 +40,8 @@ public enum SunsynkInverterRegisters {
 
     RATED_POWER(16, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.WATT), "overview"),
     DAILY_ACTIVE_ENERGY(60, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    DAILY_REACTIVE_ENERGY(61, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
+    DAILY_GRID_WORK_TIME(62, UINT16, BigDecimal.ONE, quantityFactory(Units.SECOND), "grid-information"),
     TOTAL_ACTIVE_ENERGY(63, INT32_SWAP, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     MONTHLY_PV_ENERGY(65, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "mppt-information"),
@@ -80,14 +83,18 @@ public enum SunsynkInverterRegisters {
             "mppt-information"),
     YEAR_GRID_EXPORT_ENERGY(98, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "grid-information"),
-    DAILY_PV_GENERATION(108, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "mppt-information"),
+    WARNING_MESSAGE(101, UINT64_SWAP, BigDecimal.ONE, quantityFactory(Units.AMPERE), "overview"),
+    FAULT_MESSAGE(103, UINT64_SWAP, BigDecimal.ONE, quantityFactory(Units.AMPERE), "overview"),
+    BATTERY_CORRECTED_AH(107, UINT16, BigDecimal.ONE, quantityFactory(Units.AMPERE_HOUR), "battery-information"),
+    DAILY_PV_GENERATION(108, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+            "mppt-information"),
     MPPT1_VOLTAGE(109, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
     MPPT1_CURRENT(110, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     MPPT2_VOLTAGE(111, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
     MPPT2_CURRENT(112, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     GRID_VOLTAGE(150, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "grid-information"),
     INVERTER_VOLTAGE(154, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "inverter"),
-    GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "overview"),
+    GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "overview"),
     INVERTER_CURRENT(164, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "inverter"),
     GRID_POWER(169, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "grid-information"),
     GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),

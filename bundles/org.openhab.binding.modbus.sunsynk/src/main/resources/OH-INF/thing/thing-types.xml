@@ -27,7 +27,10 @@
 	<channel-group-type id="ss-overview">
 		<label>Overview</label>
 		<channels>
+			<channel id="ss-fault-message" typeId="ss-fault-message"/>
+			<channel id="ss-warning-message" typeId="ss-warning-message"/>
 			<channel id="ss-daily-active-energy" typeId="ss-daily-active-energy"/>
+			<channel id="ss-daily-reactive-energy" typeId="ss-daily-reactive-energy"/>
 			<channel id="ss-total-active-energy" typeId="ss-total-active-energy"/>
 			<channel id="ss-rated-power" typeId="ss-rated-power"/>
 			<channel id="ss-internal-ac-temperature" typeId="ss-internal-ac-temperature"/>
@@ -41,8 +44,10 @@
 		<channels>
 			<channel id="ss-mppt1-voltage" typeId="ss-mppt1-voltage"/>
 			<channel id="ss-mppt1-current" typeId="ss-mppt1-current"/>
+			<channel id="ss-mppt1-power" typeId="ss-mppt1-power"/>
 			<channel id="ss-mppt2-voltage" typeId="ss-mppt2-voltage"/>
 			<channel id="ss-mppt2-current" typeId="ss-mppt2-current"/>
+			<channel id="ss-mppt2-power" typeId="ss-mppt2-power"/>
 			<channel id="ss-daily-pv-generation" typeId="ss-daily-pv-generation"/>
 			<channel id="ss-monthly-pv-energy" typeId="ss-monthly-pv-energy"/>
 			<channel id="ss-year-pv-energy" typeId="ss-year-pv-energy"/>
@@ -58,6 +63,7 @@
 			<channel id="ss-battery-current" typeId="ss-battery-current"/>
 			<channel id="ss-battery-power" typeId="ss-battery-power"/>
 			<channel id="ss-battery-soc" typeId="ss-battery-soc"/>
+			<channel id="ss-battery-corrected-ah" typeId="ss-battery-corrected-ah"/>
 			<channel id="ss-battery-temperature" typeId="ss-battery-temperature"/>
 			<channel id="ss-daily-battery-charge" typeId="ss-daily-battery-charge"/>
 			<channel id="ss-daily-battery-discharge-energy" typeId="ss-daily-battery-discharge-energy"/>
@@ -78,6 +84,7 @@
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
 			<channel id="ss-daily-import-energy" typeId="ss-daily-import-energy"/>
 			<channel id="ss-daily-grid-export-energy" typeId="ss-daily-grid-export-energy"/>
+			<channel id="ss-daily-grid-work-time" typeId="ss-daily-grid-work-time"/>
 			<channel id="ss-monthly-grid-energy" typeId="ss-monthly-grid-energy"/>
 			<channel id="ss-year-grid-export-energy" typeId="ss-year-grid-export-energy"/>
 			<channel id="ss-total-import-energy" typeId="ss-total-import-energy"/>
@@ -106,6 +113,24 @@
 		</channels>
 	</channel-group-type>
 
+	<channel-type id="ss-fault-message">
+		<item-type>String</item-type>
+		<label>Fault Message</label>
+		<category>Inverter</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%s" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-warning-message">
+		<item-type>String</item-type>
+		<label>Warning Message</label>
+		<category>Inverter</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%s" readOnly="true"/>
+	</channel-type>
 	<channel-type id="ss-internal-ac-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Internal AC Temperature</label>
@@ -336,6 +361,16 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
+	<channel-type id="ss-daily-grid-work-time">
+		<item-type>Number</item-type>
+		<label>Daily Grid Work Time</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
 	<channel-type id="ss-total-grid-export-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Total Grid Export Energy</label>
@@ -476,6 +511,16 @@
 		</tags>
 		<state pattern="%d %%" readOnly="true"/>
 	</channel-type>
+	<channel-type id="ss-battery-corrected-ah">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Corrected AH</label>
+		<category>Battery</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
 	<channel-type id="ss-battery-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Battery Temperature</label>
@@ -557,6 +602,16 @@
 	<channel-type id="ss-daily-active-energy">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Active Energy</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-daily-reactive-energy">
+		<item-type>Number:Energy</item-type>
+		<label>Daily ReActive Energy</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
