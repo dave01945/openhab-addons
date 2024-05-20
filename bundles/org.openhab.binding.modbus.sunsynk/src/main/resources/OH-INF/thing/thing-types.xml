@@ -96,6 +96,8 @@
 		<label>Load Information</label>
 		<channels>
 			<channel id="ss-load-power" typeId="ss-load-power"/>
+			<channel id="ss-load-power-1" typeId="ss-load-power-1"/>
+			<channel id="ss-load-power-2" typeId="ss-load-power-2"/>
 			<channel id="ss-daily-load-energy-consumption" typeId="ss-daily-load-energy-consumption"/>
 			<channel id="ss-monthly-load-energy" typeId="ss-monthly-load-energy"/>
 			<channel id="ss-year-load-energy" typeId="ss-year-load-energy"/>
@@ -384,6 +386,26 @@
 	<channel-type id="ss-load-power">
 		<item-type>Number:Power</item-type>
 		<label>Load Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-load-power-1">
+		<item-type>Number:Power</item-type>
+		<label>Load Power 1</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-load-power-2">
+		<item-type>Number:Power</item-type>
+		<label>Load Power 2</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>

@@ -99,6 +99,8 @@ public enum SunsynkInverterRegisters {
     GRID_POWER(169, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "grid-information"),
     GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
     INVERTER_POWER(175, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "inverter"),
+    LOAD_POWER_1(176, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
+    LOAD_POWER_2(177, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
     LOAD_POWER(178, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
     BATTERY_TEMPERATURE(182, UINT16, BigDecimal.ONE, quantityFactory(Units.KELVIN), ConversionConstants.DIV_BY_TEMP_TEN,
             "battery-information"),
