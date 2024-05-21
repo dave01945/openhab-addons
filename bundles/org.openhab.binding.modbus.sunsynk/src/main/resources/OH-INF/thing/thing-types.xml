@@ -69,8 +69,8 @@
 			<channel id="ss-daily-battery-discharge-energy" typeId="ss-daily-battery-discharge-energy"/>
 			<channel id="ss-total-battery-charge" typeId="ss-total-battery-charge"/>
 			<channel id="ss-total-battery-discharge-energy" typeId="ss-total-battery-discharge-energy"/>
-			<channel id="ss-total-battery-charge-limit" typeId="ss-battery-charge-limit"/>
-			<channel id="ss-total-battery-discharge-limit" typeId="ss-battery-discharge-limit"/>
+			<channel id="ss-battery-charge-limit" typeId="ss-battery-charge-limit"/>
+			<channel id="ss-battery-discharge-limit" typeId="ss-battery-discharge-limit"/>
 		</channels>
 	</channel-group-type>
 
@@ -372,7 +372,7 @@
 			<tag>Measurement</tag>
 			<tag>Power</tag>
 		</tags>
-		<state pattern="%d %unit%" readOnly="true"/>
+		<state pattern="%d s" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-total-grid-export-energy">
 		<item-type>Number:Energy</item-type>
@@ -575,24 +575,24 @@
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-battery-charge-limit">
-		<item-type>Number:Energy</item-type>
+		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Charge Limit</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
 			<tag>Power</tag>
 		</tags>
-		<state pattern="%.2f %unit%" readOnly="true"/>
+		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-battery-discharge-limit">
-		<item-type>Number:Energy</item-type>
+		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Discharge Limit</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
 			<tag>Power</tag>
 		</tags>
-		<state pattern="%.2f %unit%" readOnly="true"/>
+		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-grid-current">
 		<item-type>Number:ElectricCurrent</item-type>

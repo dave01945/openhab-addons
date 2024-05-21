@@ -94,11 +94,11 @@ public enum SunsynkInverterRegisters {
     MPPT2_CURRENT(112, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     GRID_VOLTAGE(150, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "grid-information"),
     INVERTER_VOLTAGE(154, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "inverter-information"),
-    GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "overview"),
+    GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "grid-information"),
     INVERTER_CURRENT(164, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
             "inverter-information"),
     GRID_POWER(169, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "grid-information"),
-    GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "overview"),
+    GRID_CT_POWER(172, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "grid-information"),
     INVERTER_POWER(175, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "inverter-information"),
     LOAD_POWER_1(176, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
     LOAD_POWER_2(177, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "load-information"),
@@ -116,10 +116,8 @@ public enum SunsynkInverterRegisters {
     INVERTER_FREQUENCY(193, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ),
             "inverter-information"),
     GRID_STATE(194, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "grid-information"),
-    BATTERY_CHARGE_LIMIT(314, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
-            "battery-information"),
-    BATTERY_DISCHARGE_LIMIT(315, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
-            "battery-information");
+    BATTERY_CHARGE_LIMIT(314, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information"),
+    BATTERY_DISCHARGE_LIMIT(315, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information");
 
     private final BigDecimal multiplier;
     private final int registerNumber;
