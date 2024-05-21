@@ -79,6 +79,7 @@
 		<channels>
 			<channel id="ss-grid-state" typeId="ss-grid-state"/>
 			<channel id="ss-grid-voltage" typeId="ss-grid-voltage"/>
+			<channel id="ss-grid-current" typeId="ss-grid-current"/>
 			<channel id="ss-grid-power" typeId="ss-grid-power"/>
 			<channel id="ss-grid-ct-power" typeId="ss-grid-ct-power"/>
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
@@ -191,7 +192,7 @@
 			<tag>Measurement</tag>
 			<tag>Power</tag>
 		</tags>
-		<state pattern="%.2f %unit%" readOnly="true"/>
+		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-mppt2-voltage">
 		<item-type>Number:ElectricPotential</item-type>
@@ -281,7 +282,7 @@
 			<tag>Measurement</tag>
 			<tag>Power</tag>
 		</tags>
-		<state pattern="%.2f %unit%" readOnly="true"/>
+		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-grid-voltage">
 		<item-type>Number:ElectricPotential</item-type>
@@ -354,7 +355,7 @@
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-daily-grid-export-energy">
-		<item-type>Number:Power</item-type>
+		<item-type>Number:Energy</item-type>
 		<label>Daily Grid Export Power</label>
 		<category>Energy</category>
 		<tags>
@@ -424,7 +425,7 @@
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-inverter-voltage">
-		<item-type>Number:Power</item-type>
+		<item-type>Number:ElectricPotential</item-type>
 		<label>Inverter Voltage</label>
 		<category>Energy</category>
 		<tags>
@@ -534,14 +535,14 @@
 		<state pattern="%d %%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-battery-corrected-ah">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>Number</item-type>
 		<label>Battery Corrected AH</label>
 		<category>Battery</category>
 		<tags>
 			<tag>Measurement</tag>
 			<tag>Energy</tag>
 		</tags>
-		<state pattern="%d %unit%" readOnly="true"/>
+		<state pattern="%d AH" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-battery-temperature">
 		<item-type>Number:Temperature</item-type>
@@ -576,7 +577,7 @@
 	<channel-type id="ss-battery-charge-limit">
 		<item-type>Number:Energy</item-type>
 		<label>Battery Charge Limit</label>
-		<category>Power</category>
+		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
 			<tag>Power</tag>
@@ -586,7 +587,7 @@
 	<channel-type id="ss-battery-discharge-limit">
 		<item-type>Number:Energy</item-type>
 		<label>Battery Discharge Limit</label>
-		<category>Power</category>
+		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
 			<tag>Power</tag>

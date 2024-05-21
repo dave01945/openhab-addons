@@ -18,7 +18,6 @@ import java.util.Deque;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.modbus.handler.BaseModbusThingHandler;
 import org.openhab.core.io.transport.modbus.AsyncModbusFailure;
 import org.openhab.core.io.transport.modbus.AsyncModbusReadResult;
@@ -44,7 +43,6 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class sunsynkHandler extends BaseModbusThingHandler {
 
-    @NonNullByDefault
     private static final class ModbusRequest {
 
         private final Deque<SunsynkInverterRegisters> registers;
@@ -76,8 +74,10 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
     private static final int TRIES = 3;
     private List<ModbusRequest> modbusRequests = new ArrayList<>();
-    private @Nullable SunsynkInverterConfiguration config;
 
+    /*
+     * private @Nullable SunsynkInverterConfiguration config;
+     */
     public sunsynkHandler(Thing thing) {
         super(thing);
     }

@@ -10,6 +10,11 @@
 			<description>Time between polling the data in ms.</description>
 			<default>5000</default>
 		</parameter>
+		<parameter name="retries" type="integer" required="true" min="2" unit="ms">
+			<label>Number of retries</label>
+			<description>The number of times the connection will be retried.</description>
+			<default>3</default>
+		</parameter>
 	</config-description>
 
 </config-description:config-descriptions>

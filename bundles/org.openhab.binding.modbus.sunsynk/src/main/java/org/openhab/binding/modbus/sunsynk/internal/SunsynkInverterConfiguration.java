@@ -26,4 +26,5 @@ public class SunsynkInverterConfiguration {
      * Sample configuration parameters. Replace with your own.
      */
     public int pollInterval;
+    public int retries;
 }
