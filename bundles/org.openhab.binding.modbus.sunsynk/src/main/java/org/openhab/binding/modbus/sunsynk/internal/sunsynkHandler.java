@@ -137,7 +137,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                     submitOneTimeWrite(request, result -> {
                         logger.debug("Modbus Write success - {}", result.getResponse().toString());
                     }, failure -> {
-                        logger.debug("Modbus Write fail - {}", failure.getCause().toString());
+                        logger.error("Modbus Write fail - {}", failure.getCause().toString());
                     });
                     break;
                 }

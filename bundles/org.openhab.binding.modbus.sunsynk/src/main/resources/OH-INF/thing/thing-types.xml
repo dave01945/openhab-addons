@@ -786,7 +786,7 @@
 		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-use-timer">
-		<item-type>Number</item-type>
+		<item-type>Switch</item-type>
 		<label>Use timer</label>
 		<category>Energy</category>
 		<state pattern="%s"/>

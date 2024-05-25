@@ -54,4 +54,9 @@ final class ConversionConstants {
         BigDecimal out = new BigDecimal(mask03.toBigInteger().and(new BigInteger("3", 16)));
         return out;
     };
+
+    static final Function<BigDecimal, BigDecimal> MASK_01 = (BigDecimal mask01) -> {
+        BigDecimal out = new BigDecimal(mask01.toBigInteger().and(new BigInteger("1", 16)));
+        return out;
+    };
 }

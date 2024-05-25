@@ -123,7 +123,9 @@ public enum SunsynkInverterRegisters {
     SETTING_LOAD_PRIORITY(243, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_LOAD_LIMIT(244, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_SOLAR_EXPORT(247, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
-    SETTING_USE_TIMER(248, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
+    
+    SETTING_USE_TIMER(248, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), ConversionConstants.MASK_01,
+            "settings-timer"),
     SETTING_PROG1_TIME(250, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
     SETTING_PROG2_TIME(251, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
     SETTING_PROG3_TIME(252, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
