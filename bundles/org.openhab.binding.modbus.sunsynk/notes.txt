@@ -1,2 +1,1 @@
 Total active enrgy - unsure what it is
-Total import energy - requires new method as bytes in register are split

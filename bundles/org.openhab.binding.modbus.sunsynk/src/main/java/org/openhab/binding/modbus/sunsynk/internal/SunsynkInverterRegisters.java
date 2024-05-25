@@ -58,11 +58,11 @@ public enum SunsynkInverterRegisters {
             "battery-information"),
     TOTAL_BATTERY_DISCHARGE_ENERGY(74, UINT32_SWAP, ConversionConstants.DIV_BY_TEN,
             quantityFactory(Units.KILOWATT_HOUR), "battery-information"),
-    DAILY_IMPORT_ENERGY(76, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+    DAILY_GRID_IMPORT_ENERGY(76, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "grid-information"),
     DAILY_GRID_EXPORT_ENERGY(77, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "grid-information"),
-    TOTAL_IMPORT_ENERGY(78, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
+    TOTAL_GRID_IMPORT_ENERGY(78, 80, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
             "grid-information"),
     GRID_FREQUENCY(79, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ), "grid-information"),
     TOTAL_GRID_EXPORT_ENERGY(81, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
@@ -116,12 +116,17 @@ public enum SunsynkInverterRegisters {
     INVERTER_FREQUENCY(193, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ),
             "inverter-information"),
     GRID_STATE(194, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "grid-information"),
+
+    SETTING_LOAD_PRIORITY(243, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings"),
+
     BATTERY_CHARGE_LIMIT(314, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information"),
     BATTERY_DISCHARGE_LIMIT(315, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information");
 
     private final BigDecimal multiplier;
     private final int registerNumber;
+    private final int registerNumber2;
     private final ValueType type;
+    private final boolean hasReg2;
 
     private final Function<BigDecimal, BigDecimal> conversion;
     private final Function<BigDecimal, State> stateFactory;
@@ -132,20 +137,49 @@ public enum SunsynkInverterRegisters {
             String channelGroup) {
         this.multiplier = multiplier;
         this.registerNumber = registerNumber;
+        this.registerNumber2 = -1;
         this.type = type;
         this.conversion = conversion;
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
+        this.hasReg2 = false;
     }
 
     SunsynkInverterRegisters(int registerNumber, ValueType type, BigDecimal multiplier,
             Function<BigDecimal, State> stateFactory, String channelGroup) {
         this.multiplier = multiplier;
         this.registerNumber = registerNumber;
+        this.registerNumber2 = -1;
         this.type = type;
         this.conversion = Function.identity();
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
+        this.hasReg2 = false;
+    }
+
+    SunsynkInverterRegisters(int registerNumber, int registerNumber2, ValueType type, BigDecimal multiplier,
+            Function<BigDecimal, State> stateFactory, Function<BigDecimal, BigDecimal> conversion,
+            String channelGroup) {
+        this.multiplier = multiplier;
+        this.registerNumber = registerNumber;
+        this.registerNumber2 = registerNumber2;
+        this.type = type;
+        this.conversion = conversion;
+        this.stateFactory = stateFactory;
+        this.channelGroup = channelGroup;
+        this.hasReg2 = true;
+    }
+
+    SunsynkInverterRegisters(int registerNumber, int registerNumber2, ValueType type, BigDecimal multiplier,
+            Function<BigDecimal, State> stateFactory, String channelGroup) {
+        this.multiplier = multiplier;
+        this.registerNumber = registerNumber;
+        this.registerNumber2 = registerNumber2;
+        this.type = type;
+        this.conversion = Function.identity();
+        this.stateFactory = stateFactory;
+        this.channelGroup = channelGroup;
+        this.hasReg2 = true;
     }
 
     /**
@@ -165,6 +199,24 @@ public enum SunsynkInverterRegisters {
      */
     public int getRegisterNumber() {
         return registerNumber;
+    }
+
+    /**
+     * Returns the modbus register2 number.
+     *
+     * @return modbus register2 number.
+     */
+    public int getRegisterNumber2() {
+        return registerNumber2;
+    }
+
+    /**
+     * Returns true if the channel has register 2.
+     *
+     * @return modbus register 2 boolean.
+     */
+    public boolean hasRegisterNumber2() {
+        return hasReg2;
     }
 
     /**

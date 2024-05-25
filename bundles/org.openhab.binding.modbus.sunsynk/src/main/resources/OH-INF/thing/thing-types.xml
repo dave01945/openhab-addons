@@ -20,6 +20,7 @@
 			<channel-group id="ss-grid-information" typeId="ss-grid-information"/>
 			<channel-group id="ss-load-information" typeId="ss-load-information"/>
 			<channel-group id="ss-inverter-information" typeId="ss-inverter-information"/>
+			<channel-group id="ss-settings" typeId="ss-settings"/>
 		</channel-groups>
 		<config-description-ref uri="thing-type:sunsynk:inverter"/>
 	</thing-type>
@@ -83,12 +84,12 @@
 			<channel id="ss-grid-power" typeId="ss-grid-power"/>
 			<channel id="ss-grid-ct-power" typeId="ss-grid-ct-power"/>
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
-			<channel id="ss-daily-import-energy" typeId="ss-daily-import-energy"/>
+			<channel id="ss-daily-grid-import-energy" typeId="ss-daily-grid-import-energy"/>
 			<channel id="ss-daily-grid-export-energy" typeId="ss-daily-grid-export-energy"/>
 			<channel id="ss-daily-grid-work-time" typeId="ss-daily-grid-work-time"/>
 			<channel id="ss-monthly-grid-energy" typeId="ss-monthly-grid-energy"/>
 			<channel id="ss-year-grid-export-energy" typeId="ss-year-grid-export-energy"/>
-			<channel id="ss-total-import-energy" typeId="ss-total-import-energy"/>
+			<channel id="ss-total-grid-import-energy" typeId="ss-total-grid-import-energy"/>
 			<channel id="ss-total-grid-export-energy" typeId="ss-total-grid-export-energy"/>
 		</channels>
 	</channel-group-type>
@@ -113,6 +114,13 @@
 			<channel id="ss-inverter-voltage" typeId="ss-inverter-voltage"/>
 			<channel id="ss-inverter-current" typeId="ss-inverter-current"/>
 			<channel id="ss-inverter-frequency" typeId="ss-inverter-frequency"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="ss-settings">
+		<label>Inverter Settings</label>
+		<channels>
+			<channel id="ss-setting-load-priority" typeId="ss-setting-load-priority"/>
 		</channels>
 	</channel-group-type>
 
@@ -642,9 +650,9 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-import-energy">
+	<channel-type id="ss-daily-grid-import-energy">
 		<item-type>Number:Energy</item-type>
-		<label>Daily Import Energy</label>
+		<label>Daily Grid Import Energy</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
@@ -652,9 +660,9 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-import-energy">
+	<channel-type id="ss-total-grid-import-energy">
 		<item-type>Number:Energy</item-type>
-		<label>Total Import Energy</label>
+		<label>Total Grid Import Energy</label>
 		<category>Energy</category>
 		<tags>
 			<tag>Measurement</tag>
@@ -681,5 +689,15 @@
 			<tag>Energy</tag>
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="ss-setting-load-priority">
+		<item-type>Switch</item-type>
+		<label>Prioritise load</label>
+		<category>Inverter</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%d"/>
 	</channel-type>
 </thing:thing-descriptions>

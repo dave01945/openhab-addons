@@ -25,6 +25,9 @@ import org.openhab.core.io.transport.modbus.ModbusBitUtilities;
 import org.openhab.core.io.transport.modbus.ModbusConstants;
 import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
 import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
+import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
+import org.openhab.core.io.transport.modbus.ModbusWriteRegisterRequestBlueprint;
+import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -75,9 +78,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     private static final int TRIES = 3;
     private List<ModbusRequest> modbusRequests = new ArrayList<>();
 
-    /*
-     * private @Nullable SunsynkInverterConfiguration config;
-     */
     public sunsynkHandler(Thing thing) {
         super(thing);
     }
@@ -96,9 +96,9 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 currentRequest.add(channel);
                 currentRequestFirstRegister = channel.getRegisterNumber();
             } else {
-                int sizeWithRegisterAdded = channel.getRegisterNumber() - currentRequestFirstRegister
-                        + channel.getRegisterCount();
-                if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT - 5) {
+                int sizeWithRegisterAdded = (channel.getRegisterNumber2() == -1) ? channel.getRegisterNumber()
+                        : channel.getRegisterNumber2() - currentRequestFirstRegister + channel.getRegisterCount();
+                if (sizeWithRegisterAdded > ModbusConstants.MAX_REGISTERS_READ_COUNT - 1) {
                     requests.add(new ModbusRequest(currentRequest, getSlaveId()));
                     currentRequest = new ArrayDeque<>();
 
@@ -109,7 +109,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 }
             }
         }
-
         if (!currentRequest.isEmpty()) {
             requests.add(new ModbusRequest(currentRequest, getSlaveId()));
         }
@@ -127,6 +126,21 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                         this::readError //
                 );
             }
+        } else if (channelUID.getGroupId().equals("ss-settings")) {
+            for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
+                if (channelUID.getIdWithoutGroup().equals("ss-" + channel.getChannelName())) {
+                    ModbusRegisterArray regArray = new ModbusRegisterArray(
+                            ModbusBitUtilities.commandToRegisters(command, channel.getType()).getBytes());
+                    ModbusWriteRegisterRequestBlueprint request = new ModbusWriteRegisterRequestBlueprint(getSlaveId(),
+                            channel.getRegisterNumber(), regArray, true, TRIES);
+                    submitOneTimeWrite(request, result -> {
+                        logger.debug("Modbus Write success - {}", result.getResponse().toString());
+                    }, failure -> {
+                        logger.debug("Modbus Write fail - {}", failure.getCause().toString());
+                    });
+                    break;
+                }
+            }
         }
     }
 
@@ -141,7 +155,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         }
 
         this.updateStatus(ThingStatus.UNKNOWN);
-
         this.modbusRequests = this.buildRequests();
 
         for (ModbusRequest request : modbusRequests) {
@@ -164,8 +177,16 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-                ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
-                        .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
+                if (channel.getRegisterNumber2() != -1) {
+                    int index2 = channel.getRegisterNumber2() - firstRegister;
+                    int splitRegister1Data = registers.getRegister(index);
+                    int splitRegister2Data = registers.getRegister(index2);
+                    int combinedData = (splitRegister2Data << 16) + splitRegister1Data;
+                    updateState(createChannelUid(channel), channel.createState(createDecimalType(combinedData)));
+                } else {
+                    ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
+                            .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
+                }
             }
         });
     }
@@ -182,5 +203,9 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 "ss-" + register.getChannelGroup(), //
                 "ss-" + register.getChannelName() //
         );
+    }
+
+    private DecimalType createDecimalType(int data) {
+        return new DecimalType(data);
     }
 }
