@@ -20,7 +20,8 @@
 			<channel-group id="ss-grid-information" typeId="ss-grid-information"/>
 			<channel-group id="ss-load-information" typeId="ss-load-information"/>
 			<channel-group id="ss-inverter-information" typeId="ss-inverter-information"/>
-			<channel-group id="ss-settings" typeId="ss-settings"/>
+			<channel-group id="ss-settings-solar" typeId="ss-settings-solar"/>
+			<channel-group id="ss-settings-timer" typeId="ss-settings-timer"/>
 		</channel-groups>
 		<config-description-ref uri="thing-type:sunsynk:inverter"/>
 	</thing-type>
@@ -117,17 +118,60 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-group-type id="ss-settings">
-		<label>Inverter Settings</label>
+	<channel-group-type id="ss-settings-timer">
+		<label>Inverter Timer Settings</label>
 		<channels>
+			<channel id="ss-setting-use-timer" typeId="ss-setting-use-timer"/>
+			<channel id="ss-setting-prog1-time" typeId="ss-setting-prog1-time"/>
+			<channel id="ss-setting-prog2-time" typeId="ss-setting-prog2-time"/>
+			<channel id="ss-setting-prog3-time" typeId="ss-setting-prog3-time"/>
+			<channel id="ss-setting-prog4-time" typeId="ss-setting-prog4-time"/>
+			<channel id="ss-setting-prog5-time" typeId="ss-setting-prog5-time"/>
+			<channel id="ss-setting-prog6-time" typeId="ss-setting-prog6-time"/>
+			<channel id="ss-setting-prog1-power" typeId="ss-setting-prog1-power"/>
+			<channel id="ss-setting-prog2-power" typeId="ss-setting-prog2-power"/>
+			<channel id="ss-setting-prog3-power" typeId="ss-setting-prog3-power"/>
+			<channel id="ss-setting-prog4-power" typeId="ss-setting-prog4-power"/>
+			<channel id="ss-setting-prog5-power" typeId="ss-setting-prog5-power"/>
+			<channel id="ss-setting-prog6-power" typeId="ss-setting-prog6-power"/>
+			<channel id="ss-setting-prog1-cap" typeId="ss-setting-prog1-cap"/>
+			<channel id="ss-setting-prog2-cap" typeId="ss-setting-prog2-cap"/>
+			<channel id="ss-setting-prog3-cap" typeId="ss-setting-prog3-cap"/>
+			<channel id="ss-setting-prog4-cap" typeId="ss-setting-prog4-cap"/>
+			<channel id="ss-setting-prog5-cap" typeId="ss-setting-prog5-cap"/>
+			<channel id="ss-setting-prog6-cap" typeId="ss-setting-prog6-cap"/>
+			<channel id="ss-setting-prog1-charge" typeId="ss-setting-prog1-charge"/>
+			<channel id="ss-setting-prog2-charge" typeId="ss-setting-prog2-charge"/>
+			<channel id="ss-setting-prog3-charge" typeId="ss-setting-prog3-charge"/>
+			<channel id="ss-setting-prog4-charge" typeId="ss-setting-prog4-charge"/>
+			<channel id="ss-setting-prog5-charge" typeId="ss-setting-prog5-charge"/>
+			<channel id="ss-setting-prog6-charge" typeId="ss-setting-prog6-charge"/>
+			<channel id="ss-setting-prog1-mode" typeId="ss-setting-prog1-mode"/>
+			<channel id="ss-setting-prog2-mode" typeId="ss-setting-prog2-mode"/>
+			<channel id="ss-setting-prog3-mode" typeId="ss-setting-prog3-mode"/>
+			<channel id="ss-setting-prog4-mode" typeId="ss-setting-prog4-mode"/>
+			<channel id="ss-setting-prog5-mode" typeId="ss-setting-prog5-mode"/>
+			<channel id="ss-setting-prog6-mode" typeId="ss-setting-prog6-mode"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="ss-settings-solar">
+		<label>Inverter Solar Settings</label>
+		<category>Energy</category>
+		<channels>
+			<channel id="ss-setting-batt-low" typeId="ss-setting-batt-low"/>
 			<channel id="ss-setting-load-priority" typeId="ss-setting-load-priority"/>
+			<channel id="ss-setting-load-limit" typeId="ss-setting-load-limit"/>
+			<channel id="ss-setting-grid-charge" typeId="ss-setting-grid-charge"/>
+			<channel id="ss-setting-solar-export" typeId="ss-setting-solar-export"/>
+			<channel id="ss-setting-gen-input" typeId="ss-setting-gen-input"/>
 		</channels>
 	</channel-group-type>
 
 	<channel-type id="ss-fault-message">
 		<item-type>String</item-type>
 		<label>Fault Message</label>
-		<category>Inverter</category>
+		<category>Energy</category>
 		<tags>
 			<tag>Status</tag>
 		</tags>
@@ -136,7 +180,7 @@
 	<channel-type id="ss-warning-message">
 		<item-type>String</item-type>
 		<label>Warning Message</label>
-		<category>Inverter</category>
+		<category>Energy</category>
 		<tags>
 			<tag>Status</tag>
 		</tags>
@@ -694,10 +738,321 @@
 	<channel-type id="ss-setting-load-priority">
 		<item-type>Switch</item-type>
 		<label>Prioritise load</label>
-		<category>Inverter</category>
+		<category>Energy</category>
 		<tags>
 			<tag>Status</tag>
 		</tags>
 		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-low" advanced="true">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery low percentage</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-grid-charge">
+		<item-type>Switch</item-type>
+		<label>Grid charge</label>
+		<category>Energy</category>
+	</channel-type>
+	<channel-type id="ss-setting-gen-input" advanced="true">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Generator input function</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">Disabled</option>
+				<option value="1">Output</option>
+				<option value="2">Input</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-load-limit">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Load limit function</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">Allow export</option>
+				<option value="1">Essentials</option>
+				<option value="2">Zero export</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-solar-export">
+		<item-type>Switch</item-type>
+		<label>Solar export</label>
+		<category>Energy</category>
+		<state pattern="%s"/>
+	</channel-type>
+	<channel-type id="ss-setting-use-timer">
+		<item-type>Number</item-type>
+		<label>Use timer</label>
+		<category>Energy</category>
+		<state pattern="%s"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog1-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 1 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 2 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 3 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 4 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 5 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-time">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 6 Start</label>
+		<category>Energy</category>
+		<state pattern="%d"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog1-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 1 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 2 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 3 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 4 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 5 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-power">
+		<item-type>Number:Power</item-type>
+		<label>Timer program 6 power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog1-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 1 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 2 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 3 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 4 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 5 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 6 cap</label>
+		<category>Energy</category>
+		<state pattern="%d %%"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog1-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 1 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 2 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 3 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 4 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 5 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-charge">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 6 charge</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">No grid or gen</option>
+				<option value="1">Allow grid</option>
+				<option value="2">Allow gen</option>
+				<option value="3">Allow grid and gen</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog1-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 1 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 2 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 3 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 4 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 5 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Timer program 6 mode</label>
+		<category>Energy</category>
+		<state pattern="%s">
+			<options>
+				<option value="0">None</option>
+				<option value="4">General</option>
+				<option value="8">Backup</option>
+				<option value="16">Charge</option>
+			</options>
+		</state>
 	</channel-type>
 </thing:thing-descriptions>

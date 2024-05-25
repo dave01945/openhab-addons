@@ -126,7 +126,8 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                         this::readError //
                 );
             }
-        } else if (channelUID.getGroupId().equals("ss-settings")) {
+        } else if (channelUID.getGroupId().equals("ss-settings-solar")
+                || channelUID.getGroupId().equals("ss-settings-timer")) {
             for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
                 if (channelUID.getIdWithoutGroup().equals("ss-" + channel.getChannelName())) {
                     ModbusRegisterArray regArray = new ModbusRegisterArray(

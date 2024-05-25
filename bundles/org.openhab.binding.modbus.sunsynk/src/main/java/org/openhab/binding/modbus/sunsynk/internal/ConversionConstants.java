@@ -44,4 +44,14 @@ final class ConversionConstants {
 
     static final Function<BigDecimal, BigDecimal> DIV_BY_TEMP_TEN = (BigDecimal temp) -> temp
             .subtract(new BigDecimal(1000)).divide(new BigDecimal(10)).add(new BigDecimal(273.15f));
+
+    static final Function<BigDecimal, BigDecimal> MASK_1C = (BigDecimal mask1c) -> {
+        BigDecimal out = new BigDecimal(mask1c.toBigInteger().and(new BigInteger("1c", 16)));
+        return out;
+    };
+
+    static final Function<BigDecimal, BigDecimal> MASK_03 = (BigDecimal mask03) -> {
+        BigDecimal out = new BigDecimal(mask03.toBigInteger().and(new BigInteger("3", 16)));
+        return out;
+    };
 }
