@@ -94,7 +94,7 @@ public enum SunsynkInverterRegisters {
     MPPT2_CURRENT(112, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     GRID_VOLTAGE(150, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "grid-information"),
     INVERTER_VOLTAGE(154, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "inverter-information"),
-    GRID_CURRENT(160, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "grid-information"),
+    GRID_CURRENT(160, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "grid-information"),
     INVERTER_CURRENT(164, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
             "inverter-information"),
     GRID_POWER(169, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "grid-information"),
@@ -123,7 +123,7 @@ public enum SunsynkInverterRegisters {
     SETTING_LOAD_PRIORITY(243, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_LOAD_LIMIT(244, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_SOLAR_EXPORT(247, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
-    
+
     SETTING_USE_TIMER(248, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), ConversionConstants.MASK_01,
             "settings-timer"),
     SETTING_PROG1_TIME(250, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
