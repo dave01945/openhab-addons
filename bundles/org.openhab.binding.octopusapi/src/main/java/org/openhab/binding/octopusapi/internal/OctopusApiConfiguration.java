@@ -25,7 +25,6 @@ public class OctopusApiConfiguration {
     /**
      * Sample configuration parameters. Replace with your own.
      */
-    public String hostname = "";
-    public String password = "";
-    public int refreshInterval = 600;
+    public String hostname = "https://api.octopus.energy";
+    public int refreshInterval = 30;
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:octopusapi:settings">
+		<parameter name="refreshInterval" type="integer" required="true" min="10" unit="S">
+			<label>Refresh Interval</label>
+			<description>Time between refreshing the data in seconds.</description>
+			<default>30</default>
+		</parameter>
+		<parameter name="hostname" type="text" required="true">
+			<label>Hostname</label>
+			<description>Hostname for octopus API.</description>
+			<default>https://api.octopus.energy</default>
+		</parameter>
+	</config-description>
+
+</config-description:config-descriptions>
