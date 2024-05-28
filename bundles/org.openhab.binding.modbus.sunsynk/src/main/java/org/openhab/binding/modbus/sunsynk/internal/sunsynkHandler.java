@@ -34,6 +34,7 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +78,16 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
     private static final int TRIES = 3;
     private List<ModbusRequest> modbusRequests = new ArrayList<>();
+
+    private int inverterPower;
+    private int auxPower;
+    private int gridPower;
+    private int gridL1Power;
+    private int gridL2Power;
+    private int ctPower;
+    private int loadPower;
+    private int loadPowerL1;
+    private int loadPowerL2;
 
     public sunsynkHandler(Thing thing) {
         super(thing);
@@ -178,6 +189,21 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
+                switch (channel.getRegisterNumber()) {
+                    case 166:
+                        auxPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                        break;
+                    case 167:
+                        gridL1Power = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                        break;
+                    case 172:
+                        ctPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                        break;
+                    case 175:
+                        inverterPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                        break;
+                }
+
                 if (channel.getRegisterNumber2() != -1) {
                     int index2 = channel.getRegisterNumber2() - firstRegister;
                     int splitRegister1Data = registers.getRegister(index);
@@ -188,6 +214,15 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                     ModbusBitUtilities.extractStateFromRegisters(registers, index, channel.getType())
                             .map(channel::createState).ifPresent(v -> updateState(createChannelUid(channel), v));
                 }
+            }
+            if (firstRegister <= 178 && request.registers.getLast().getRegisterNumber() >= 178) {
+                State essential = createDecimalType((inverterPower + gridL1Power) - auxPower);
+                State nonEssential = createDecimalType(ctPower - gridL1Power);
+                updateState(new ChannelUID(thing.getUID(), "ss-load-information", "ss-essential-load-power"),
+                        essential);
+                updateState(new ChannelUID(thing.getUID(), "ss-load-information", "ss-non-essential-load-power"),
+                        nonEssential);
+
             }
         });
     }

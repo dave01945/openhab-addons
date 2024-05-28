@@ -82,6 +82,8 @@
 			<channel id="ss-grid-state" typeId="ss-grid-state"/>
 			<channel id="ss-grid-voltage" typeId="ss-grid-voltage"/>
 			<channel id="ss-grid-current" typeId="ss-grid-current"/>
+			<channel id="ss-grid-l1-power" typeId="ss-grid-l1-power"/>
+			<channel id="ss-grid-l2-power" typeId="ss-grid-l2-power"/>
 			<channel id="ss-grid-power" typeId="ss-grid-power"/>
 			<channel id="ss-grid-ct-power" typeId="ss-grid-ct-power"/>
 			<channel id="ss-grid-frequency" typeId="ss-grid-frequency"/>
@@ -98,6 +100,9 @@
 	<channel-group-type id="ss-load-information">
 		<label>Load Information</label>
 		<channels>
+			<channel id="ss-aux-load-power" typeId="ss-aux-load-power"/>
+			<channel id="ss-essential-load-power" typeId="ss-essential-load-power"/>
+			<channel id="ss-non-essential-load-power" typeId="ss-non-essential-load-power"/>
 			<channel id="ss-load-power" typeId="ss-load-power"/>
 			<channel id="ss-load-power-1" typeId="ss-load-power-1"/>
 			<channel id="ss-load-power-2" typeId="ss-load-power-2"/>
@@ -356,6 +361,26 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
+	<channel-type id="ss-grid-l1-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid L1 Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-grid-l2-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid L2 Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
 	<channel-type id="ss-rated-power">
 		<item-type>Number:Power</item-type>
 		<label>Rated Power</label>
@@ -435,6 +460,36 @@
 			<tag>Energy</tag>
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-aux-load-power">
+		<item-type>Number:Power</item-type>
+		<label>Aux Load Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-essential-load-power">
+		<item-type>Number:Power</item-type>
+		<label>Essential Load Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-non-essential-load-power">
+		<item-type>Number:Power</item-type>
+		<label>Non-Essential Load Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
+		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-load-power">
 		<item-type>Number:Power</item-type>
