@@ -222,7 +222,6 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                         essential);
                 updateState(new ChannelUID(thing.getUID(), "ss-load-information", "ss-non-essential-load-power"),
                         nonEssential);
-
             }
         });
     }

@@ -31,6 +31,7 @@
 		<channels>
 			<channel id="ss-fault-message" typeId="ss-fault-message"/>
 			<channel id="ss-warning-message" typeId="ss-warning-message"/>
+			<channel id="ss-inverter-state" typeId="ss-inverter-state"/>
 			<channel id="ss-daily-active-energy" typeId="ss-daily-active-energy"/>
 			<channel id="ss-daily-reactive-energy" typeId="ss-daily-reactive-energy"/>
 			<channel id="ss-total-active-energy" typeId="ss-total-active-energy"/>
@@ -173,7 +174,7 @@
 		</channels>
 	</channel-group-type>
 
-	<channel-type id="ss-fault-message">
+	<channel-type id="ss-fault-message" advanced="true">
 		<item-type>String</item-type>
 		<label>Fault Message</label>
 		<category>Energy</category>
@@ -182,7 +183,7 @@
 		</tags>
 		<state pattern="%s" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-warning-message">
+	<channel-type id="ss-warning-message" advanced="true">
 		<item-type>String</item-type>
 		<label>Warning Message</label>
 		<category>Energy</category>
@@ -190,6 +191,15 @@
 			<tag>Status</tag>
 		</tags>
 		<state pattern="%s" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-inverter-state">
+		<item-type>String</item-type>
+		<label>Inverter State</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Status</tag>
+		</tags>
+		<state pattern="%d" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-internal-ac-temperature">
 		<item-type>Number:Temperature</item-type>
@@ -211,7 +221,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-external-temperature">
+	<channel-type id="ss-external-temperature" advanced="true">
 		<item-type>Number:Temperature</item-type>
 		<label>External Temperature</label>
 		<category>Temperature</category>
@@ -271,7 +281,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-pv-energy">
+	<channel-type id="ss-monthly-pv-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly PV Energy</label>
 		<category>Energy</category>
@@ -281,7 +291,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-load-energy">
+	<channel-type id="ss-monthly-load-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly Load Energy</label>
 		<category>Energy</category>
@@ -291,7 +301,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-monthly-grid-energy">
+	<channel-type id="ss-monthly-grid-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Monthly Grid Energy</label>
 		<category>Energy</category>
@@ -301,7 +311,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-grid-export-energy">
+	<channel-type id="ss-year-grid-export-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly Grid Export Energy</label>
 		<category>Energy</category>
@@ -311,7 +321,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-pv-energy">
+	<channel-type id="ss-year-pv-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly PV Energy</label>
 		<category>Energy</category>
@@ -321,7 +331,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-year-load-energy">
+	<channel-type id="ss-year-load-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Yearly Load Energy</label>
 		<category>Energy</category>
@@ -361,7 +371,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-l1-power">
+	<channel-type id="ss-grid-l1-power" advanced="true">
 		<item-type>Number:Power</item-type>
 		<label>Grid L1 Power</label>
 		<category>Energy</category>
@@ -371,7 +381,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-grid-l2-power">
+	<channel-type id="ss-grid-l2-power" advanced="true">
 		<item-type>Number:Power</item-type>
 		<label>Grid L2 Power</label>
 		<category>Energy</category>
@@ -411,7 +421,7 @@
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="ss-daily-pv-generation">
+	<channel-type id="ss-daily-pv-generation" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily PV Generation</label>
 		<category>Energy</category>
@@ -421,7 +431,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-pv-generation">
+	<channel-type id="ss-total-pv-generation" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total PV Generation</label>
 		<category>Energy</category>
@@ -431,7 +441,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-grid-export-energy">
+	<channel-type id="ss-daily-grid-export-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Grid Export Power</label>
 		<category>Energy</category>
@@ -441,7 +451,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-grid-work-time">
+	<channel-type id="ss-daily-grid-work-time" advanced="true">
 		<item-type>Number</item-type>
 		<label>Daily Grid Work Time</label>
 		<category>Energy</category>
@@ -451,7 +461,7 @@
 		</tags>
 		<state pattern="%d s" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-grid-export-energy">
+	<channel-type id="ss-total-grid-export-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Grid Export Energy</label>
 		<category>Energy</category>
@@ -491,7 +501,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-load-power">
+	<channel-type id="ss-load-power" advanced="true">
 		<item-type>Number:Power</item-type>
 		<label>Load Power</label>
 		<category>Energy</category>
@@ -501,7 +511,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-load-power-1">
+	<channel-type id="ss-load-power-1" advanced="true">
 		<item-type>Number:Power</item-type>
 		<label>Load Power 1</label>
 		<category>Energy</category>
@@ -511,7 +521,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-load-power-2">
+	<channel-type id="ss-load-power-2" advanced="true">
 		<item-type>Number:Power</item-type>
 		<label>Load Power 2</label>
 		<category>Energy</category>
@@ -561,7 +571,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-battery-charge">
+	<channel-type id="ss-daily-battery-charge" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Battery Charge</label>
 		<category>Energy</category>
@@ -571,7 +581,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-battery-charge">
+	<channel-type id="ss-total-battery-charge" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Battery Charge</label>
 		<category>Energy</category>
@@ -581,7 +591,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-load-energy-consumption">
+	<channel-type id="ss-daily-load-energy-consumption" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Load Energy Consumption</label>
 		<category>Energy</category>
@@ -591,7 +601,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-load-energy-consumption">
+	<channel-type id="ss-total-load-energy-consumption" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Load Energy Consumption</label>
 		<category>Energy</category>
@@ -601,7 +611,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-voltage">
+	<channel-type id="ss-battery-voltage" advanced="true">
 		<item-type>Number:ElectricPotential</item-type>
 		<label>Battery Voltage</label>
 		<category>Energy</category>
@@ -611,7 +621,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-current">
+	<channel-type id="ss-battery-current" advanced="true">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Current</label>
 		<category>Energy</category>
@@ -641,7 +651,7 @@
 		</tags>
 		<state pattern="%d %%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-corrected-ah">
+	<channel-type id="ss-battery-corrected-ah" advanced="true">
 		<item-type>Number</item-type>
 		<label>Battery Corrected AH</label>
 		<category>Battery</category>
@@ -661,7 +671,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-battery-discharge-energy">
+	<channel-type id="ss-daily-battery-discharge-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Battery Discharge Energy</label>
 		<category>Energy</category>
@@ -671,7 +681,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-battery-discharge-energy">
+	<channel-type id="ss-total-battery-discharge-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Battery Discharge Energy</label>
 		<category>Energy</category>
@@ -681,7 +691,7 @@
 		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-charge-limit">
+	<channel-type id="ss-battery-charge-limit" advanced="true">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Charge Limit</label>
 		<category>Energy</category>
@@ -691,7 +701,7 @@
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-battery-discharge-limit">
+	<channel-type id="ss-battery-discharge-limit" advanced="true">
 		<item-type>Number:ElectricCurrent</item-type>
 		<label>Battery Discharge Limit</label>
 		<category>Energy</category>
@@ -719,7 +729,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-active-energy">
+	<channel-type id="ss-total-active-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Active Energy</label>
 		<category>Energy</category>
@@ -729,7 +739,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-active-energy">
+	<channel-type id="ss-daily-active-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Active Energy</label>
 		<category>Energy</category>
@@ -739,7 +749,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-reactive-energy">
+	<channel-type id="ss-daily-reactive-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily ReActive Energy</label>
 		<category>Energy</category>
@@ -749,7 +759,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-daily-grid-import-energy">
+	<channel-type id="ss-daily-grid-import-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Daily Grid Import Energy</label>
 		<category>Energy</category>
@@ -759,7 +769,7 @@
 		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
-	<channel-type id="ss-total-grid-import-energy">
+	<channel-type id="ss-total-grid-import-energy" advanced="true">
 		<item-type>Number:Energy</item-type>
 		<label>Total Grid Import Energy</label>
 		<category>Energy</category>

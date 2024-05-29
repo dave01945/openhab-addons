@@ -39,6 +39,7 @@ import org.openhab.core.types.State;
 public enum SunsynkInverterRegisters {
 
     RATED_POWER(16, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.WATT), "overview"),
+    INVERTER_STATE(59, UINT16, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     DAILY_ACTIVE_ENERGY(60, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     DAILY_REACTIVE_ENERGY(61, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     DAILY_GRID_WORK_TIME(62, UINT16, BigDecimal.ONE, quantityFactory(Units.SECOND), "grid-information"),
