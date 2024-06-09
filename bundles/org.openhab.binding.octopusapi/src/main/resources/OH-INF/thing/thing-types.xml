@@ -4,28 +4,43 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<!-- Comment this in for Things which need a Bridge to function.
-			<supported-bridge-type-refs>
-			<bridge-type-ref id="OctopusApiBridge" />
-			</supported-bridge-type-refs>
-		-->
+	<thing-type id="octopus">
 
-		<label>OctopusApi Binding Thing</label>
-		<description>Sample thing for OctopusApi Binding</description>
+		<label>Octopus API Binding Thing</label>
+		<description>Octopus API Binding for consumption and agile rates</description>
 
 		<channels>
-			<channel id="channel1" typeId="sample-channel"/>
+			<channel id="consumption" typeId="consumption"/>
+			<channel id="export" typeId="export"/>
+			<channel id="agileRates" typeId="agileRates"/>
+			<channel id="agileExRates" typeId="agileExRates"/>
 		</channels>
 
 		<config-description-ref uri="thing-type:octopusapi:settings"/>
 	</thing-type>
 
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>Number:Temperature</item-type>
-		<label>Example Temperature</label><!-- Use uppercase words, except prepositions. 2-3 words, max 25 chars -->
-		<description>Sample channel for OctopusApi Binding</description>
+	<channel-type id="consumption">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption</label>
+		<description>30 min energy consumption</description>
+		<state pattern="%.2f %unit%"></state>
+	</channel-type>
+	<channel-type id="export">
+		<item-type>Number:Energy</item-type>
+		<label>Export</label>
+		<description>30 min energy export</description>
+		<state pattern="%.2f %unit%"></state>
+	</channel-type>
+	<channel-type id="agileRates">
+		<item-type>Number:EnergyPrice</item-type>
+		<label>Agile Rates</label>
+		<description>Agile rates for the next day</description>
+		<state pattern="%.2f %unit%"></state>
+	</channel-type>
+	<channel-type id="agileExRates">
+		<item-type>Number:EnergyPrice</item-type>
+		<label>Agile Rates Excluding VAT</label>
+		<description>Agile rates for the next day excluding VAT</description>
+		<state pattern="%.2f %unit%"></state>
 	</channel-type>
 </thing:thing-descriptions>

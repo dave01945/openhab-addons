@@ -5,15 +5,52 @@
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<config-description uri="thing-type:octopusapi:settings">
-		<parameter name="refreshInterval" type="integer" required="true" min="10" unit="S">
+		<parameter name="refreshInterval" type="integer" required="true" min="1" max="24" unit="h">
 			<label>Refresh Interval</label>
-			<description>Time between refreshing the data in seconds.</description>
-			<default>30</default>
+			<description>Time between refreshing the data in hours.</description>
+			<default>12</default>
 		</parameter>
 		<parameter name="hostname" type="text" required="true">
 			<label>Hostname</label>
 			<description>Hostname for octopus API.</description>
 			<default>https://api.octopus.energy</default>
+		</parameter>
+		<parameter name="apiKey" type="text" required="true">
+			<label>API Key</label>
+			<description>API Key for octopus API.</description>
+		</parameter>
+		<parameter name="mpanImport" type="text" required="true">
+			<label>Import MPAN</label>
+			<description>Import MPAN for meter.</description>
+		</parameter>
+		<parameter name="mpanExport" type="text" required="false">
+			<label>Export MPAN</label>
+			<description>Export MPAN for meter.</description>
+		</parameter>
+		<parameter name="meterSerial" type="text" required="true">
+			<label>Meter serial</label>
+			<description>Serial number for meter.</description>
+		</parameter>
+		<parameter name="agileRegion" type="text" required="true">
+			<label>Agile Region</label>
+			<description>Region for agile rates.</description>
+			<default>A</default>
+			<options>
+				<option value='A'>Eastern England</option>
+				<option value='B'>East Midlands</option>
+				<option value='C'>London</option>
+				<option value='D'>Merseyside and Northern Wales</option>
+				<option value='E'>West Midlands</option>
+				<option value='F'>North Eastern England</option>
+				<option value='G'>North Western England</option>
+				<option value='H'>Southern England</option>
+				<option value='J'>South Eastern England</option>
+				<option value='K'>Southern Wales</option>
+				<option value='L'>South Western England</option>
+				<option value='M'>Yorkshire</option>
+				<option value='N'>Southern Scotland</option>
+				<option value='P'>Northern Scotland</option>
+			</options>
 		</parameter>
 	</config-description>
 

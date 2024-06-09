@@ -22,9 +22,11 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class OctopusApiConfiguration {
 
-    /**
-     * Sample configuration parameters. Replace with your own.
-     */
     public String hostname = "https://api.octopus.energy";
-    public int refreshInterval = 30;
+    public int refreshInterval = 12;
+    public String apiKey = "";
+    public String mpanImport = "";
+    public String mpanExport = "";
+    public String meterSerial = "";
+    public String agileRegion = "A";
 }

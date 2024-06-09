@@ -4,7 +4,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/addon/v1.0.0 https://openhab.org/schemas/addon-1.0.0.xsd">
 
 	<type>binding</type>
-	<name>OctopusApi Binding</name>
-	<description>This is the binding for OctopusApi.</description>
+	<name>Octopus API Binding</name>
+	<description>This is the binding for Octopus API.</description>
 
 </addon:addon>
