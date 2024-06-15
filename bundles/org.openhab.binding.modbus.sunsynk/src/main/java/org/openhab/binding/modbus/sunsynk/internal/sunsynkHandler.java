@@ -88,6 +88,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     private int loadPower;
     private int loadPowerL1;
     private int loadPowerL2;
+    private int[] timerStart = new int[6];
 
     public sunsynkHandler(Thing thing) {
         super(thing);
@@ -139,21 +140,122 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             }
         } else if (channelUID.getGroupId().equals("ss-settings-solar")
                 || channelUID.getGroupId().equals("ss-settings-timer")) {
+            String id = channelUID.getIdWithoutGroup();
             for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
-                if (channelUID.getIdWithoutGroup().equals("ss-" + channel.getChannelName())) {
-                    ModbusRegisterArray regArray = new ModbusRegisterArray(
-                            ModbusBitUtilities.commandToRegisters(command, channel.getType()).getBytes());
-                    ModbusWriteRegisterRequestBlueprint request = new ModbusWriteRegisterRequestBlueprint(getSlaveId(),
-                            channel.getRegisterNumber(), regArray, true, TRIES);
-                    submitOneTimeWrite(request, result -> {
-                        logger.debug("Modbus Write success - {}", result.getResponse().toString());
-                    }, failure -> {
-                        logger.error("Modbus Write fail - {}", failure.getCause().toString());
-                    });
-                    break;
+                if (id.equals("ss-" + channel.getChannelName())) {
+                    if (id.endsWith("-time")) {
+                        submitWrite(fixTimerCommand(Integer.parseInt(command.toString()), id), channel);
+                        break;
+                    } else {
+                        submitWrite(command, channel);
+                        break;
+                    }
                 }
             }
         }
+    }
+
+    private Command fixTimerCommand(Integer comm, String id) {
+        int fixedCommand = 0;
+        int command;
+        if (comm % 100 > 59) {
+            command = (comm - (comm % 100)) + 100;
+            logger.error("{} - Timmer minutes over 59", id);
+        } else {
+            command = comm;
+        }
+        if (id.contains("prog1")) {
+            if (command > 0 && command < timerStart[1]) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[0];
+                logger.error("{} - Timmer out of range", id);
+            }
+        } else if (id.contains("prog2")) {
+            if (command > timerStart[0] && command < timerStart[2]) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[1];
+                logger.error("{} - Timmer out of range", id);
+            }
+        } else if (id.contains("prog3")) {
+            if (command > timerStart[1] && command < timerStart[3]) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[2];
+                logger.error("{} - Timmer out of range", id);
+            }
+        } else if (id.contains("prog4")) {
+            if (command > timerStart[2] && command < timerStart[4]) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[3];
+                logger.error("{} - Timmer out of range", id);
+            }
+        } else if (id.contains("prog5")) {
+            if (command > timerStart[3] && command < timerStart[5]) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[4];
+                logger.error("{} - Timmer out of range", id);
+            }
+        } else if (id.contains("prog6")) {
+            if (command > timerStart[4] && command < 2359) {
+                fixedCommand = command;
+            } else {
+                fixedCommand = timerStart[5];
+                logger.error("{} - Timmer out of range", id);
+            }
+        }
+        DecimalType commandRet = new DecimalType(fixedCommand);
+        return commandRet;
+    }
+
+    private void setVariables(SunsynkInverterRegisters channel, ModbusRegisterArray registers, int index) {
+        switch (channel.getRegisterNumber()) {
+            case 166:
+                auxPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                break;
+            case 167:
+                gridL1Power = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                break;
+            case 172:
+                ctPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                break;
+            case 175:
+                inverterPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
+                break;
+            case 250:
+                timerStart[0] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+            case 251:
+                timerStart[1] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+            case 252:
+                timerStart[2] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+            case 253:
+                timerStart[3] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+            case 254:
+                timerStart[4] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+            case 255:
+                timerStart[5] = ModbusBitUtilities.extractUInt16(registers.getBytes(), index);
+                break;
+        }
+    }
+
+    private void submitWrite(Command command, SunsynkInverterRegisters channel) {
+        ModbusRegisterArray regArray = new ModbusRegisterArray(
+                ModbusBitUtilities.commandToRegisters(command, channel.getType()).getBytes());
+        ModbusWriteRegisterRequestBlueprint request = new ModbusWriteRegisterRequestBlueprint(getSlaveId(),
+                channel.getRegisterNumber(), regArray, true, TRIES);
+        submitOneTimeWrite(request, result -> {
+            logger.debug("Modbus Write success - {}", result.getResponse().toString());
+        }, failure -> {
+            logger.error("Modbus Write fail - {}", failure.getCause().toString());
+        });
     }
 
     @Override
@@ -189,20 +291,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
             for (SunsynkInverterRegisters channel : request.registers) {
                 int index = channel.getRegisterNumber() - firstRegister;
-                switch (channel.getRegisterNumber()) {
-                    case 166:
-                        auxPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
-                        break;
-                    case 167:
-                        gridL1Power = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
-                        break;
-                    case 172:
-                        ctPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
-                        break;
-                    case 175:
-                        inverterPower = ModbusBitUtilities.extractSInt16(registers.getBytes(), index);
-                        break;
-                }
+                setVariables(channel, registers, index);
 
                 if (channel.getRegisterNumber2() != -1) {
                     int index2 = channel.getRegisterNumber2() - firstRegister;
