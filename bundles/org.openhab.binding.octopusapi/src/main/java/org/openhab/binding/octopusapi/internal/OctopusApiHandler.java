@@ -14,7 +14,7 @@ package org.openhab.binding.octopusapi.internal;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.measure.quantity.Energy;
@@ -64,7 +64,7 @@ public class OctopusApiHandler extends BaseThingHandler {
 
     private final HttpClient httpClient;
 
-    private @NonNullByDefault({}) Future scheduledFuture;
+    private @NonNullByDefault({}) ScheduledFuture<?> scheduledFuture;
 
     public OctopusApiHandler(Thing thing, HttpClient httpClient) {
         super(thing);
@@ -154,7 +154,7 @@ public class OctopusApiHandler extends BaseThingHandler {
 
         agileArray.forEach(item -> {
             JSONObject itemJson = (JSONObject) item;
-            Instant timestamp = Instant.parse(itemJson.getString("valid_to"));
+            Instant timestamp = Instant.parse(itemJson.getString("valid_from"));
 
             QuantityType<EnergyPrice> value = new QuantityType<>(itemJson.getDouble("value_inc_vat") + " GBP/kWh");
             QuantityType<EnergyPrice> valueEx = new QuantityType<>(itemJson.getDouble("value_exc_vat") + " GBP/kWh");
