@@ -19,16 +19,23 @@ import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.UIN
 import static org.openhab.core.io.transport.modbus.ModbusConstants.ValueType.UINT64_SWAP;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.function.Function;
 
 import javax.measure.Unit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.io.transport.modbus.ModbusConstants.ValueType;
+import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.types.State;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link SunsynkInverterRegisters} is responsible for defining Modbus registers and their units.
@@ -130,12 +137,12 @@ public enum SunsynkInverterRegisters {
 
     SETTING_USE_TIMER(248, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), ConversionConstants.MASK_01,
             "settings-timer"),
-    SETTING_PROG1_TIME(250, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
-    SETTING_PROG2_TIME(251, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
-    SETTING_PROG3_TIME(252, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
-    SETTING_PROG4_TIME(253, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
-    SETTING_PROG5_TIME(254, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
-    SETTING_PROG6_TIME(255, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-timer"),
+    SETTING_PROG1_TIME(250, UINT16, ConversionConstants.TIME, "settings-timer"),
+    SETTING_PROG2_TIME(251, UINT16, ConversionConstants.TIME, "settings-timer"),
+    SETTING_PROG3_TIME(252, UINT16, ConversionConstants.TIME, "settings-timer"),
+    SETTING_PROG4_TIME(253, UINT16, ConversionConstants.TIME, "settings-timer"),
+    SETTING_PROG5_TIME(254, UINT16, ConversionConstants.TIME, "settings-timer"),
+    SETTING_PROG6_TIME(255, UINT16, ConversionConstants.TIME, "settings-timer"),
 
     SETTING_PROG1_POWER(256, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-timer"),
     SETTING_PROG2_POWER(257, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-timer"),
@@ -187,8 +194,11 @@ public enum SunsynkInverterRegisters {
 
     private final Function<BigDecimal, BigDecimal> conversion;
     private final Function<BigDecimal, State> stateFactory;
+    private final boolean dateType;
     private final String channelGroup;
 
+    private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
+
     SunsynkInverterRegisters(int registerNumber, ValueType type, BigDecimal multiplier,
             Function<BigDecimal, State> stateFactory, Function<BigDecimal, BigDecimal> conversion,
             String channelGroup) {
@@ -200,6 +210,7 @@ public enum SunsynkInverterRegisters {
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
         this.hasReg2 = false;
+        this.dateType = false;
     }
 
     SunsynkInverterRegisters(int registerNumber, ValueType type, BigDecimal multiplier,
@@ -212,6 +223,7 @@ public enum SunsynkInverterRegisters {
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
         this.hasReg2 = false;
+        this.dateType = false;
     }
 
     SunsynkInverterRegisters(int registerNumber, int registerNumber2, ValueType type, BigDecimal multiplier,
@@ -225,6 +237,7 @@ public enum SunsynkInverterRegisters {
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
         this.hasReg2 = true;
+        this.dateType = false;
     }
 
     SunsynkInverterRegisters(int registerNumber, int registerNumber2, ValueType type, BigDecimal multiplier,
@@ -237,6 +250,20 @@ public enum SunsynkInverterRegisters {
         this.stateFactory = stateFactory;
         this.channelGroup = channelGroup;
         this.hasReg2 = true;
+        this.dateType = false;
+    }
+
+    SunsynkInverterRegisters(int registerNumber, ValueType type, Function<BigDecimal, BigDecimal> conversion,
+            String channelGroup) {
+        this.multiplier = BigDecimal.ONE;
+        this.registerNumber = registerNumber;
+        this.registerNumber2 = -1;
+        this.type = type;
+        this.conversion = conversion;
+        this.stateFactory = quantityFactory(Units.ONE);
+        this.channelGroup = channelGroup;
+        this.hasReg2 = false;
+        this.dateType = true;
     }
 
     /**
@@ -319,9 +346,17 @@ public enum SunsynkInverterRegisters {
      * @return {@link State] for the given value.
      */
     public State createState(DecimalType registerValue) {
-        final BigDecimal scaledValue = registerValue.toBigDecimal().multiply(this.multiplier);
+        BigDecimal value = new BigDecimal(registerValue.intValue());
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond(conversion.apply(value).longValue(), 0, ZoneOffset.UTC);
+        ZonedDateTime zDate = ZonedDateTime.of(dateTime, ZoneId.systemDefault());
 
-        final BigDecimal convertedValue = conversion.apply(scaledValue);
-        return this.stateFactory.apply(convertedValue);
+        if (this.dateType) {
+            DateTimeType dateTimeType = new DateTimeType(zDate);
+            return dateTimeType;
+        } else {
+            final BigDecimal scaledValue = registerValue.toBigDecimal().multiply(this.multiplier);
+            final BigDecimal convertedValue = conversion.apply(scaledValue);
+            return this.stateFactory.apply(convertedValue);
+        }
     }
 }

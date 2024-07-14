@@ -14,6 +14,9 @@ package org.openhab.binding.modbus.sunsynk.internal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -58,5 +61,38 @@ final class ConversionConstants {
     static final Function<BigDecimal, BigDecimal> MASK_01 = (BigDecimal mask01) -> {
         BigDecimal out = new BigDecimal(mask01.toBigInteger().and(new BigInteger("1", 16)));
         return out;
+    };
+
+    static final Function<BigDecimal, BigDecimal> TIME = (BigDecimal time) -> {
+        String number = String.valueOf(time.intValue());
+        char[] digits = number.toCharArray();
+        int minutes = 0;
+        int hours = 0;
+        if (digits.length == 4) {
+            hours = (digits[0] - 48) * 10;
+            hours += digits[1] - 48;
+            minutes = (digits[2] - 48) * 10;
+            minutes += digits[3] - 48;
+        } else if (digits.length == 3) {
+            hours = digits[0] - 48;
+            minutes = (digits[1] - 48) * 10;
+            minutes += digits[2] - 48;
+        } else if (digits.length == 2) {
+            hours = 0;
+            minutes = (digits[0] - 48) * 10;
+            minutes += digits[1] - 48;
+        } else if (digits.length == 1) {
+            hours = 0;
+            minutes = digits[0] - 48;
+        } else {
+            hours = 12;
+            minutes = 34;
+        }
+        LocalDateTime dateTime = LocalDate.now().atTime(hours, minutes);
+        if (dateTime.isBefore(LocalDateTime.now())) {
+            dateTime = dateTime.plusDays(1);
+        }
+
+        return new BigDecimal(dateTime.toEpochSecond(ZoneOffset.UTC));
     };
 }

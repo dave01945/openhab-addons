@@ -857,40 +857,40 @@
 		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog1-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 1 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog2-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 2 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog3-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 3 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog4-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 4 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog5-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 5 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog6-time">
-		<item-type>Number:Dimensionless</item-type>
+		<item-type>DateTime</item-type>
 		<label>Timer program 6 Start</label>
 		<category>Energy</category>
-		<state pattern="%d"/>
+		<state pattern="%s"/>
 	</channel-type>
 	<channel-type id="ss-setting-prog1-power">
 		<item-type>Number:Power</item-type>
