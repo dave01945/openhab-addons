@@ -5,7 +5,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<config-description uri="thing-type:octopusapi:settings">
-		<parameter name="refreshInterval" type="integer" required="true" min="1" max="24" unit="h">
+		<parameter name="refreshInterval" type="integer" required="true" min="1" max="48" unit="h">
 			<label>Refresh Interval</label>
 			<description>Time between refreshing the data in hours.</description>
 			<default>12</default>
