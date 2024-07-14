@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.modbus.sunsynk.internal;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -144,7 +146,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
             for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
                 if (id.equals("ss-" + channel.getChannelName())) {
                     if (id.endsWith("-time")) {
-                        submitWrite(fixTimerCommand(Integer.parseInt(command.toString()), id), channel);
+                        submitWrite(fixTimerCommand(command.toString(), id), channel);
                         break;
                     } else {
                         submitWrite(command, channel);
@@ -155,7 +157,13 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         }
     }
 
-    private Command fixTimerCommand(Integer comm, String id) {
+    private Command fixTimerCommand(String string, String id) {
+        // SimpleDateFormat commandFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        DateTimeFormatter commandFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        LocalDateTime dateTime = LocalDateTime.parse(string, commandFormat);
+        DateTimeFormatter sendFormat = DateTimeFormatter.ofPattern("HHmm");
+        String timeStr = dateTime.format(sendFormat);
+        int comm = Integer.parseInt(timeStr);
         int fixedCommand = 0;
         int command;
         if (comm % 100 > 59) {
