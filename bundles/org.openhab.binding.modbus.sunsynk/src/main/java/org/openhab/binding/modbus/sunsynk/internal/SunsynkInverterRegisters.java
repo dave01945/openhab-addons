@@ -34,8 +34,6 @@ import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.types.State;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link SunsynkInverterRegisters} is responsible for defining Modbus registers and their units.
@@ -196,8 +194,6 @@ public enum SunsynkInverterRegisters {
     private final Function<BigDecimal, State> stateFactory;
     private final boolean dateType;
     private final String channelGroup;
-
-    private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
 
     SunsynkInverterRegisters(int registerNumber, ValueType type, BigDecimal multiplier,
             Function<BigDecimal, State> stateFactory, Function<BigDecimal, BigDecimal> conversion,
