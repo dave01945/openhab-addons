@@ -317,7 +317,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 int nonEssentialNegetive = ctPower - gridL1Power;
                 if (nonEssentialNegetive < 0) {
                     nonEssentialNegetive = 0;
-                } 
+                }
                 State nonEssential = createDecimalType(nonEssentialNegetive);
                 updateState(new ChannelUID(thing.getUID(), "ss-load-information", "ss-essential-load-power"),
                         essential);
