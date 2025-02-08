@@ -169,9 +169,8 @@ public class OctopusApiHandler extends BaseThingHandler {
         Instant now = Instant.now();
         Instant start = now.minus(24, ChronoUnit.HOURS);
         Instant end = now.plus(24, ChronoUnit.HOURS);
-        String urlAgile = baseUrl + "/v1/products/AGILE-FLEX-22-11-25/electricity-tariffs/E-1R-AGILE-FLEX-22-11-25-"
-                + agileRegion + "/standard-unit-rates/?period_from=" + start.toString() + "&period_to="
-                + end.toString();
+        String urlAgile = baseUrl + "/v1/products/AGILE-24-10-01/electricity-tariffs/E-1R-AGILE-24-10-01-" + agileRegion
+                + "/standard-unit-rates/?period_from=" + start.toString() + "&period_to=" + end.toString();
         ChannelUID agileUID = new ChannelUID(thing.getUID(), "agileRates");
         ChannelUID agileExUID = new ChannelUID(thing.getUID(), "agileExRates");
 
