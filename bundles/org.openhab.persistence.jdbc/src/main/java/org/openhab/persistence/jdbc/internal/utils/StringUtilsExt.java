@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -20,7 +20,6 @@ import java.util.Properties;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.core.persistence.FilterCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class StringUtilsExt {
     public static String replaceArrayMerge(String str, String separate, Object[] separators) {
         String s = str;
         for (int i = 0; i < separators.length; i++) {
-            s = s.replaceFirst(separate, (String) separators[i]);
+            s = s.replaceAll(separate, (String) separators[i]);
         }
         return s;
     }
@@ -55,7 +54,7 @@ public class StringUtilsExt {
     public static String replaceArrayMerge(String str, String[] separate, String[] separators) {
         String s = str;
         for (int i = 0; i < separators.length; i++) {
-            s = s.replaceFirst(separate[i], separators[i]);
+            s = s.replaceAll(separate[i], separators[i]);
         }
         return s;
     }
@@ -69,7 +68,7 @@ public class StringUtilsExt {
 
     /**
      * <b>JDBC-URI Examples:</b><br/>
-     * 
+     *
      * <pre>
      * {@code
      * jdbc:dbShortcut:c:/dev/databaseName<br/>
@@ -161,24 +160,22 @@ public class StringUtilsExt {
             props.put("pathQuery", dbURI.getQuery());
         }
 
-        String path = "";
-        if (dbURI.getPath() != null) {
-            String gp = dbURI.getPath();
-            String st = "/";
-            if (gp.indexOf("/") <= 1) {
-                if (substrPos(gp, st).size() > 1) {
-                    path = stringBeforeLastSubstr(gp, st) + st;
+        String pathURI = dbURI.getPath();
+        if (pathURI != null) {
+            String path = "";
+            if ((pathURI.indexOf("/") >= 0) && (pathURI.indexOf("/") <= 1)) {
+                if (stringAfterSubstr(pathURI, "/").contains("/")) {
+                    path = stringBeforeLastSubstr(pathURI, "/") + "/";
                 } else {
-                    path = stringBeforeSubstr(gp, st) + st;
+                    path = stringBeforeSubstr(pathURI, "/") + "/";
                 }
             }
-            if (dbURI.getScheme() != null && dbURI.getScheme().length() == 1) {
-                path = dbURI.getScheme() + ":" + path;
+            String schemeURI = dbURI.getScheme();
+            if (schemeURI != null && schemeURI.length() == 1) {
+                path = schemeURI + ":" + path;
             }
             props.put("serverPath", path);
-        }
-        if (dbURI.getPath() != null) {
-            props.put("databaseName", stringAfterLastSubstr(dbURI.getPath(), "/"));
+            props.put("databaseName", pathURI.contains("/") ? stringAfterLastSubstr(pathURI, "/") : pathURI);
         }
         if (dbURI.getPort() != -1) {
             props.put("portNumber", dbURI.getPort() + "");
@@ -255,32 +252,5 @@ public class StringUtilsExt {
             }
         }
         return arr;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#toString()
-     */
-    public static String filterToString(FilterCriteria filter) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("FilterCriteria [itemName=");
-        builder.append(filter.getItemName());
-        builder.append(", beginDate=");
-        builder.append(filter.getBeginDate());
-        builder.append(", endDate=");
-        builder.append(filter.getEndDate());
-        builder.append(", pageNumber=");
-        builder.append(filter.getPageNumber());
-        builder.append(", pageSize=");
-        builder.append(filter.getPageSize());
-        builder.append(", operator=");
-        builder.append(filter.getOperator());
-        builder.append(", ordering=");
-        builder.append(filter.getOrdering());
-        builder.append(", state=");
-        builder.append(filter.getState());
-        builder.append("]");
-        return builder.toString();
     }
 }

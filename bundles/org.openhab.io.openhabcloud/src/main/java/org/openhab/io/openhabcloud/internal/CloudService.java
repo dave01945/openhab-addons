@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,6 +27,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.openhab.core.OpenHAB;
 import org.openhab.core.config.core.ConfigurableService;
+import org.openhab.core.events.AbstractEvent;
 import org.openhab.core.events.Event;
 import org.openhab.core.events.EventFilter;
 import org.openhab.core.events.EventPublisher;
@@ -63,6 +64,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Victor Belov - Initial contribution
  * @author Kai Kreuzer - migrated code to new Jetty client and ESH APIs
+ * @author Dan Cunningham - Extended notification enhancements
  */
 @Component(service = { CloudService.class, EventSubscriber.class,
         ActionService.class }, configurationPid = "org.openhab.openhabcloud", property = Constants.SERVICE_PID
@@ -80,6 +82,7 @@ public class CloudService implements ActionService, CloudClientListener, EventSu
     private static final int DEFAULT_LOCAL_OPENHAB_MAX_CONCURRENT_REQUESTS = 200;
     private static final int DEFAULT_LOCAL_OPENHAB_REQUEST_TIMEOUT = 30000;
     private static final String HTTPCLIENT_NAME = "openhabcloud";
+    public static final String CLOUD_EVENT_SOURCE = "org.openhab.io.openhabcloud";
 
     private final Logger logger = LoggerFactory.getLogger(CloudService.class);
 
@@ -113,11 +116,22 @@ public class CloudService implements ActionService, CloudClientListener, EventSu
      * @param userId the {@link String} containing the openHAB Cloud user id to send message to
      * @param message the {@link String} containing a message to send to specified user id
      * @param icon the {@link String} containing a name of the icon to be used with this notification
-     * @param severity the {@link String} containing severity (good, info, warning, error) of notification
+     * @param tag the {@link String} containing tag of notification (formerly severity)
+     * @param title the {@link String} containing the title to be used with this notification
+     * @param referenceId the {@link String} identifier used to collapse and hide notifications
+     * @param onClickAction the {@link String} containing the action to perform when clicked
+     * @param mediaAttachmentUrl the {@link String} containing the media to attach to a notification
+     * @param actionButton1 the {@link String} containing the action button in the format "Title=Action"
+     * @param actionButton2 the {@link String} containing the action button in the format "Title=Action"
+     * @param actionButton3 the {@link String} containing the action button in the format "Title=Action"
      */
-    public void sendNotification(String userId, String message, @Nullable String icon, @Nullable String severity) {
+    public void sendNotification(String userId, String message, @Nullable String icon, @Nullable String tag,
+            @Nullable String title, @Nullable String referenceId, @Nullable String onClickAction,
+            @Nullable String mediaAttachmentUrl, @Nullable String actionButton1, @Nullable String actionButton2,
+            @Nullable String actionButton3) {
         logger.debug("Sending message '{}' to user id {}", message, userId);
-        cloudClient.sendNotification(userId, message, icon, severity);
+        cloudClient.sendNotification(userId, message, icon, tag, title, referenceId, onClickAction, mediaAttachmentUrl,
+                actionButton1, actionButton2, actionButton3);
     }
 
     /**
@@ -139,11 +153,70 @@ public class CloudService implements ActionService, CloudClientListener, EventSu
      *
      * @param message the {@link String} containing a message to send to specified user id
      * @param icon the {@link String} containing a name of the icon to be used with this notification
-     * @param severity the {@link String} containing severity (good, info, warning, error) of notification
+     * @param tag the {@link String} containing tag of notification (formerly severity)
+     * @param title the {@link String} containing the title to be used with this notification
+     * @param referenceId the {@link String} identifier used to collapse and hide notifications
+     * @param onClickAction the {@link String} containing the action to perform when clicked
+     * @param mediaAttachmentUrl the {@link String} containing the media to attach to a notification
+     * @param actionButton1 the {@link String} containing the action button in the format "Title=Action"
+     * @param actionButton2 the {@link String} containing the action button in the format "Title=Action"
+     * @param actionButton3 the {@link String} containing the action button in the format "Title=Action"
      */
-    public void sendBroadcastNotification(String message, @Nullable String icon, @Nullable String severity) {
+    public void sendBroadcastNotification(String message, @Nullable String icon, @Nullable String tag,
+            @Nullable String title, @Nullable String referenceId, @Nullable String onClickAction,
+            @Nullable String mediaAttachmentUrl, @Nullable String actionButton1, @Nullable String actionButton2,
+            @Nullable String actionButton3) {
         logger.debug("Sending broadcast message '{}' to all users", message);
-        cloudClient.sendBroadcastNotification(message, icon, severity);
+        cloudClient.sendBroadcastNotification(message, icon, tag, title, referenceId, onClickAction, mediaAttachmentUrl,
+                actionButton1, actionButton2, actionButton3);
+    }
+
+    /**
+     * This method hides a notification by its tag through the openHAB Cloud service for a specific user
+     *
+     * @param userId the {@link String} containing the openHAB Cloud user id to hide messages for
+     * @param tag the {@link String} containing severity group of notification
+     *
+     */
+    public void hideNotificationByTag(String userId, String tag) {
+        logger.debug("hiding with tag '{}' to user id {}", tag, userId);
+        cloudClient.hideNotificationByTag(userId, tag);
+    }
+
+    /**
+     * This method hides a notification by its tag through the openHAB Cloud service for all
+     * mobile devices of all users of the account
+     *
+     * @param severity the {@link String} containing severity (good, info, warning, error) of notification
+     *
+     */
+    public void hideBroadcastNotificationByTag(String tag) {
+        logger.debug("hiding broadcast with tag '{}'", tag);
+        cloudClient.hideBroadcastNotificationByTag(tag);
+    }
+
+    /**
+     * This method hides a notification by its reference id through the openHAB Cloud service for a specific user
+     *
+     * @param userId the {@link String} containing the openHAB Cloud user id to hide messages for
+     * @param severity the {@link String} containing severity group of notification
+     *
+     */
+    public void hideNotificationByReferenceId(String userId, String referenceId) {
+        logger.debug("hiding with referenceId '{}' to user id {}", referenceId, userId);
+        cloudClient.hideNotificationByReferenceId(userId, referenceId);
+    }
+
+    /**
+     * This method hides a notification by its reference id through the openHAB Cloud service for all
+     * mobile devices of all users of the account
+     *
+     * @param severity the {@link String} containing severity (good, info, warning, error) of notification
+     *
+     */
+    public void hideBroadcastNotificationByReferenceId(String referenceId) {
+        logger.debug("hiding broadcast with referenceId '{}'", referenceId);
+        cloudClient.hideBroadcastNotificationByReferenceId(referenceId);
     }
 
     private String substringBefore(String str, String separator) {
@@ -319,7 +392,7 @@ public class CloudService implements ActionService, CloudClientListener, EventSu
     }
 
     @Override
-    public void sendCommand(String itemName, String commandString) {
+    public void sendCommand(String itemName, String commandString, @Nullable String source, @Nullable String userId) {
         try {
             Item item = itemRegistry.getItem(itemName);
             Command command = null;
@@ -342,7 +415,8 @@ public class CloudService implements ActionService, CloudClientListener, EventSu
             }
             if (command != null) {
                 logger.debug("Received command '{}' for item '{}'", commandString, itemName);
-                eventPublisher.post(ItemEventFactory.createCommandEvent(itemName, command));
+                eventPublisher.post(ItemEventFactory.createCommandEvent(itemName, command,
+                        AbstractEvent.buildDelegatedSource(source, CLOUD_EVENT_SOURCE, userId)));
             } else {
                 logger.warn("Received invalid command '{}' for item '{}'", commandString, itemName);
             }
