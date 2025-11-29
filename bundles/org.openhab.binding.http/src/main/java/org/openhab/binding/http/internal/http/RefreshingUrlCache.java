@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -58,12 +58,19 @@ public class RefreshingUrlCache {
     private final String httpContent;
     private final @Nullable String httpContentType;
     private final HttpStatusListener httpStatusListener;
+    private final boolean refreshAfterCommand;
 
     private @Nullable ScheduledFuture<?> future;
     private @Nullable ChannelHandlerContent lastContent;
 
     public RefreshingUrlCache(RateLimitedHttpClient httpClient, String url, HttpThingConfig thingConfig,
             String httpContent, @Nullable String httpContentType, HttpStatusListener httpStatusListener) {
+        this(httpClient, url, thingConfig, httpContent, httpContentType, httpStatusListener, false);
+    }
+
+    public RefreshingUrlCache(RateLimitedHttpClient httpClient, String url, HttpThingConfig thingConfig,
+            String httpContent, @Nullable String httpContentType, HttpStatusListener httpStatusListener,
+            boolean refreshAfterCommand) {
         this.httpClient = httpClient;
         this.url = url;
         this.strictErrorHandling = thingConfig.strictErrorHandling;
@@ -74,6 +81,7 @@ public class RefreshingUrlCache {
         this.httpContent = httpContent;
         this.httpContentType = httpContentType;
         this.httpStatusListener = httpStatusListener;
+        this.refreshAfterCommand = refreshAfterCommand;
         fallbackEncoding = thingConfig.encoding;
     }
 
@@ -100,6 +108,13 @@ public class RefreshingUrlCache {
         refresh(false);
     }
 
+    public void refreshAfterCommand(ScheduledExecutorService executor) {
+        if (refreshAfterCommand) {
+            executor.schedule(() -> this.refresh(), 1, TimeUnit.SECONDS);
+            logger.trace("Started refresh task for URL '{}'", url);
+        }
+    }
+
     private void refresh(boolean isRetry) {
         if (consumers.isEmpty()) {
             // do not refresh if we don't have listeners
@@ -108,7 +123,7 @@ public class RefreshingUrlCache {
 
         // format URL
         try {
-            URI uri = Util.uriFromString(String.format(this.url, new Date()));
+            URI uri = Util.uriFromString(Util.wrappedStringFormat(this.url, new Date()));
             logger.trace("Requesting refresh (retry={}) from '{}' with timeout {}ms", isRetry, uri, timeout);
 
             httpClient.newRequest(uri, httpMethod, httpContent, httpContentType).thenAccept(request -> {
@@ -151,7 +166,7 @@ public class RefreshingUrlCache {
         consumers.add(consumer);
     }
 
-    public Optional<ChannelHandlerContent> get() {
+    public Optional<ChannelHandlerContent> getCached() {
         return Optional.ofNullable(lastContent);
     }
 

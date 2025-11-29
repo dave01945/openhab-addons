@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,6 +13,7 @@
 package org.openhab.binding.mercedesme.internal.utils;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.core.types.State;
 
 /**
@@ -25,13 +26,19 @@ public class ChannelStateMap {
     private String channel;
     private String group;
     private State state;
-    private long timestamp;
+    private @Nullable UOMObserver uomObserver;
 
-    public ChannelStateMap(String ch, String grp, State st, long ts) {
+    public ChannelStateMap(String ch, String grp, State st) {
         channel = ch;
         group = grp;
         state = st;
-        timestamp = ts;
+    }
+
+    public ChannelStateMap(String ch, String grp, State st, @Nullable UOMObserver uom) {
+        channel = ch;
+        group = grp;
+        state = st;
+        uomObserver = uom;
     }
 
     public String getChannel() {
@@ -46,13 +53,17 @@ public class ChannelStateMap {
         return state;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public boolean hasUomObserver() {
+        return uomObserver != null;
+    }
+
+    public @Nullable UOMObserver getUomObserver() {
+        return uomObserver;
     }
 
     @Override
     public String toString() {
-        return group + ":" + channel + " " + state;
+        return group + "#" + channel + " " + state;
     }
 
     public boolean isValid() {

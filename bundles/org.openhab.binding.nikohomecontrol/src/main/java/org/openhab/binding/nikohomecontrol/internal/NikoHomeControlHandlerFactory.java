@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -16,12 +16,16 @@ import static org.openhab.binding.nikohomecontrol.internal.NikoHomeControlBindin
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlAccessHandler;
 import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlActionHandler;
+import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlAlarmHandler;
 import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlBridgeHandler1;
 import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlBridgeHandler2;
-import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlEnergyMeterHandler;
+import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlCarChargerHandler;
+import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlMeterHandler;
 import org.openhab.binding.nikohomecontrol.internal.handler.NikoHomeControlThermostatHandler;
 import org.openhab.core.i18n.TimeZoneProvider;
+import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -38,6 +42,7 @@ import org.osgi.service.component.annotations.Reference;
  * handlers.
  *
  * @author Mark Herwege - Initial Contribution
+ * @author Mark Herwege - Add car chargers
  */
 
 @NonNullByDefault
@@ -46,13 +51,14 @@ public class NikoHomeControlHandlerFactory extends BaseThingHandlerFactory {
 
     private final NetworkAddressService networkAddressService;
     private final TimeZoneProvider timeZoneProvider;
+    private final HttpClientFactory httpClientFactory;
 
     @Activate
     public NikoHomeControlHandlerFactory(final @Reference NetworkAddressService networkAddressService,
-            final @Reference TimeZoneProvider timeZoneProvider) {
-        super();
+            final @Reference TimeZoneProvider timeZoneProvider, final @Reference HttpClientFactory httpClientFactory) {
         this.networkAddressService = networkAddressService;
         this.timeZoneProvider = timeZoneProvider;
+        this.httpClientFactory = httpClientFactory;
     }
 
     @Override
@@ -64,16 +70,23 @@ public class NikoHomeControlHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         if (BRIDGE_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
             if (BRIDGEII_THING_TYPE.equals(thing.getThingTypeUID())) {
-                return new NikoHomeControlBridgeHandler2((Bridge) thing, networkAddressService, timeZoneProvider);
+                return new NikoHomeControlBridgeHandler2((Bridge) thing, networkAddressService, timeZoneProvider,
+                        httpClientFactory);
             } else {
-                return new NikoHomeControlBridgeHandler1((Bridge) thing, timeZoneProvider);
+                return new NikoHomeControlBridgeHandler1((Bridge) thing, networkAddressService, timeZoneProvider);
             }
-        } else if (THING_TYPE_THERMOSTAT.equals(thing.getThingTypeUID())) {
-            return new NikoHomeControlThermostatHandler(thing);
-        } else if (THING_TYPE_ENERGYMETER.equals(thing.getThingTypeUID())) {
-            return new NikoHomeControlEnergyMeterHandler(thing);
         } else if (ACTION_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
             return new NikoHomeControlActionHandler(thing);
+        } else if (THERMOSTAT_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            return new NikoHomeControlThermostatHandler(thing);
+        } else if (METER_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            return new NikoHomeControlMeterHandler(thing);
+        } else if (ACCESS_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            return new NikoHomeControlAccessHandler(thing);
+        } else if (ALARM_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            return new NikoHomeControlAlarmHandler(thing);
+        } else if (CAR_CHARGER_THING_TYPES_UIDS.contains(thing.getThingTypeUID())) {
+            return new NikoHomeControlCarChargerHandler(thing);
         }
 
         return null;

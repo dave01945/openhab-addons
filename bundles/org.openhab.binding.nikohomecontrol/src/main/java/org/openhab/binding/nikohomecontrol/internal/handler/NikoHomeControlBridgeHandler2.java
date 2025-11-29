@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -23,8 +23,13 @@ import java.util.NoSuchElementException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.openhab.binding.nikohomecontrol.internal.NikoHomeControlBindingConstants;
+import org.openhab.binding.nikohomecontrol.internal.SslContextProvider;
 import org.openhab.binding.nikohomecontrol.internal.protocol.nhc2.NikoHomeControlCommunication2;
 import org.openhab.core.i18n.TimeZoneProvider;
+import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.net.NetworkAddressService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ThingStatus;
@@ -41,6 +46,7 @@ import com.google.gson.JsonSyntaxException;
  * to the framework.
  *
  * @author Mark Herwege - Initial Contribution
+ * @author Mark Herwege - Add http connection to controller
  */
 @NonNullByDefault
 public class NikoHomeControlBridgeHandler2 extends NikoHomeControlBridgeHandler {
@@ -49,17 +55,20 @@ public class NikoHomeControlBridgeHandler2 extends NikoHomeControlBridgeHandler 
 
     private final Gson gson = new GsonBuilder().create();
 
-    NetworkAddressService networkAddressService;
+    private HttpClientFactory httpClientFactory;
+    private @Nullable HttpClient httpClient;
 
     public NikoHomeControlBridgeHandler2(Bridge nikoHomeControlBridge, NetworkAddressService networkAddressService,
-            TimeZoneProvider timeZoneProvider) {
-        super(nikoHomeControlBridge, timeZoneProvider);
-        this.networkAddressService = networkAddressService;
+            TimeZoneProvider timeZoneProvider, HttpClientFactory httpClientFactory) {
+        super(nikoHomeControlBridge, networkAddressService, timeZoneProvider);
+        this.httpClientFactory = httpClientFactory;
     }
 
     @Override
     public void initialize() {
         logger.debug("initializing NHC II bridge handler");
+
+        scheduler.submit(() -> getControllerId());
 
         Date expiryDate = getTokenExpiryDate();
         if (expiryDate == null) {
@@ -86,7 +95,13 @@ public class NikoHomeControlBridgeHandler2 extends NikoHomeControlBridgeHandler 
         addr = (addr == null) ? "unknown" : addr.replace(".", "_");
         String clientId = addr + "-" + thing.getUID().toString().replace(":", "_");
         try {
-            nhcComm = new NikoHomeControlCommunication2(this, clientId, scheduler);
+            HttpClient httpClient = this.httpClient;
+            if (httpClient == null) {
+                SslContextFactory.Client sslContextFactory = SslContextProvider.getSslContextFactory();
+                httpClient = httpClientFactory.createHttpClient(NikoHomeControlBindingConstants.BINDING_ID,
+                        sslContextFactory);
+            }
+            nhcComm = new NikoHomeControlCommunication2(this, clientId, scheduler, httpClient);
             startCommunication();
         } catch (CertificateException e) {
             // this should not happen unless there is a programming error
@@ -97,8 +112,22 @@ public class NikoHomeControlBridgeHandler2 extends NikoHomeControlBridgeHandler 
     }
 
     @Override
+    public void dispose() {
+        HttpClient httpClient = this.httpClient;
+        if (httpClient != null) {
+            try {
+                httpClient.stop();
+            } catch (Exception e) {
+                // Nothing to do
+            }
+        }
+        this.httpClient = null;
+        super.dispose();
+    }
+
+    @Override
     protected void updateProperties() {
-        Map<String, String> properties = new HashMap<>();
+        Map<String, String> properties = new HashMap<>(thing.getProperties());
 
         NikoHomeControlCommunication2 comm = (NikoHomeControlCommunication2) nhcComm;
         if (comm != null) {

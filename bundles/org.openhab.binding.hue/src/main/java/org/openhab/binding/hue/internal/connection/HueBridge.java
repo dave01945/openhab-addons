@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -36,7 +36,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -827,7 +826,7 @@ public class HueBridge {
                 })//
                 .filter(scene -> !scene.isRecycle())//
                 .sorted(Comparator.comparing(Scene::extractKeyForComparator))//
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -1096,6 +1095,11 @@ public class HueBridge {
 
     private HueResult doNetwork(String address, HttpMethod requestMethod, @Nullable String body)
             throws ConfigurationException, CommunicationException {
+        return doNetwork(address, requestMethod, body, requestMethod == HttpMethod.GET);
+    }
+
+    private HueResult doNetwork(String address, HttpMethod requestMethod, @Nullable String body, boolean retryOnTimeout)
+            throws ConfigurationException, CommunicationException {
         logger.trace("Hue request: {} - URL = '{}'", requestMethod, address);
         try {
             final Request request = httpClient.newRequest(address).method(requestMethod).timeout(timeout,
@@ -1123,9 +1127,14 @@ public class HueBridge {
                         e.getCause());
             }
         } catch (TimeoutException e) {
-            String message = e.getMessage();
-            logger.debug("TimeoutException occurred during execution: {}", message, e);
-            throw new CommunicationException(message == null ? TEXT_OFFLINE_COMMUNICATION_ERROR : message);
+            if (retryOnTimeout) {
+                logger.debug("TimeoutException occurred during execution, retry");
+                return doNetwork(address, requestMethod, body, false);
+            } else {
+                String message = e.getMessage();
+                logger.debug("TimeoutException occurred during execution: {}", message, e);
+                throw new CommunicationException(message == null ? TEXT_OFFLINE_COMMUNICATION_ERROR : message);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             String message = e.getMessage();
