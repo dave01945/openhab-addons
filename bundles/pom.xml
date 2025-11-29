@@ -9,13 +9,7 @@
     <groupId>org.openhab.addons</groupId>
 
     <artifactId>org.openhab.addons.reactor</artifactId>
-<<<<<<< HEAD
-
-    <version>4.2.0-SNAPSHOT</version>
-
-=======
     <version>5.1.0-SNAPSHOT</version>
->>>>>>> origin/main
   </parent>
 
   <groupId>org.openhab.addons.bundles</groupId>
@@ -43,11 +37,7 @@
     <module>org.openhab.automation.pidcontroller</module>
 
     <module>org.openhab.automation.pwm</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.automation.pythonscripting</module>
->>>>>>> origin/main
     <!-- io -->
 
     <module>org.openhab.io.homekit</module>
@@ -61,11 +51,7 @@
     <module>org.openhab.io.openhabcloud</module>
 
     <!-- transformations -->
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.transform.basicprofiles</module>
->>>>>>> origin/main
     <module>org.openhab.transform.bin2json</module>
 
     <module>org.openhab.transform.exec</module>
@@ -93,12 +79,8 @@
     <module>org.openhab.binding.adorne</module>
 
     <module>org.openhab.binding.ahawastecollection</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.airgradient</module>
     <module>org.openhab.binding.airparif</module>
->>>>>>> origin/main
     <module>org.openhab.binding.airq</module>
 
     <module>org.openhab.binding.airquality</module>
@@ -106,20 +88,10 @@
     <module>org.openhab.binding.airvisualnode</module>
 
     <module>org.openhab.binding.alarmdecoder</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.allplay</module>
-
-=======
->>>>>>> origin/main
     <module>org.openhab.binding.amazondashbutton</module>
 
     <module>org.openhab.binding.amazonechocontrol</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.amberelectric</module>
->>>>>>> origin/main
     <module>org.openhab.binding.ambientweather</module>
 
     <module>org.openhab.binding.amplipi</module>
@@ -131,11 +103,7 @@
     <module>org.openhab.binding.anel</module>
 
     <module>org.openhab.binding.anthem</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.argoclima</module>
->>>>>>> origin/main
     <module>org.openhab.binding.astro</module>
 
     <module>org.openhab.binding.asuswrt</module>
@@ -149,11 +117,7 @@
     <module>org.openhab.binding.avmfritz</module>
 
     <module>org.openhab.binding.awattar</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.bambulab</module>
->>>>>>> origin/main
     <module>org.openhab.binding.benqprojector</module>
 
     <module>org.openhab.binding.bigassfan</module>
@@ -179,12 +143,8 @@
     <module>org.openhab.binding.bluetooth.govee</module>
 
     <module>org.openhab.binding.bluetooth.grundfosalpha</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.bluetooth.hdpowerview</module>
     <module>org.openhab.binding.bluetooth.listener</module>
->>>>>>> origin/main
     <module>org.openhab.binding.bluetooth.radoneye</module>
 
     <module>org.openhab.binding.bluetooth.roaming</module>
@@ -198,11 +158,7 @@
     <module>org.openhab.binding.boschshc</module>
 
     <module>org.openhab.binding.bosesoundtouch</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.broadlink</module>
->>>>>>> origin/main
     <module>org.openhab.binding.broadlinkthermostat</module>
 
     <module>org.openhab.binding.bsblan</module>
@@ -212,11 +168,7 @@
     <module>org.openhab.binding.buienradar</module>
 
     <module>org.openhab.binding.caddx</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.casokitchen</module>
->>>>>>> origin/main
     <module>org.openhab.binding.cbus</module>
 
     <module>org.openhab.binding.chatgpt</module>
@@ -248,11 +200,7 @@
     <module>org.openhab.binding.digiplex</module>
 
     <module>org.openhab.binding.digitalstrom</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.dirigera</module>
->>>>>>> origin/main
     <module>org.openhab.binding.dlinksmarthome</module>
 
     <module>org.openhab.binding.dmx</module>
@@ -278,11 +226,7 @@
     <module>org.openhab.binding.echonetlite</module>
 
     <module>org.openhab.binding.ecobee</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.ecoflow</module>
->>>>>>> origin/main
     <module>org.openhab.binding.ecotouch</module>
 
     <module>org.openhab.binding.ecovacs</module>
@@ -290,22 +234,12 @@
     <module>org.openhab.binding.ecowatt</module>
 
     <module>org.openhab.binding.ekey</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.electroluxair</module>
-
-=======
     <module>org.openhab.binding.electroluxappliance</module>
->>>>>>> origin/main
     <module>org.openhab.binding.elerotransmitterstick</module>
 
     <module>org.openhab.binding.elroconnects</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.emby</module>
     <module>org.openhab.binding.emotiva</module>
->>>>>>> origin/main
     <module>org.openhab.binding.energenie</module>
 
     <module>org.openhab.binding.energidataservice</module>
@@ -315,15 +249,9 @@
     <module>org.openhab.binding.enocean</module>
 
     <module>org.openhab.binding.enphase</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.enturno</module>
-
-=======
     <module>org.openhab.binding.entsoe</module>
     <module>org.openhab.binding.enturno</module>
     <module>org.openhab.binding.ephemeris</module>
->>>>>>> origin/main
     <module>org.openhab.binding.epsonprojector</module>
 
     <module>org.openhab.binding.etherrain</module>
@@ -337,19 +265,11 @@
     <module>org.openhab.binding.feed</module>
 
     <module>org.openhab.binding.feican</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.fenecon</module>
->>>>>>> origin/main
     <module>org.openhab.binding.fineoffsetweatherstation</module>
 
     <module>org.openhab.binding.flicbutton</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.flume</module>
->>>>>>> origin/main
     <module>org.openhab.binding.fmiweather</module>
 
     <module>org.openhab.binding.folderwatcher</module>
@@ -359,24 +279,12 @@
     <module>org.openhab.binding.foobot</module>
 
     <module>org.openhab.binding.freeathome</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.freebox</module>
-
-=======
->>>>>>> origin/main
     <module>org.openhab.binding.freeboxos</module>
 
     <module>org.openhab.binding.freecurrency</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.fronius</module>
-
-=======
     <module>org.openhab.binding.frenchgovtenergydata</module>
     <module>org.openhab.binding.fronius</module>
     <module>org.openhab.binding.froniuswattpilot</module>
->>>>>>> origin/main
     <module>org.openhab.binding.fsinternetradio</module>
 
     <module>org.openhab.binding.ftpupload</module>
@@ -398,11 +306,7 @@
     <module>org.openhab.binding.gpstracker</module>
 
     <module>org.openhab.binding.gree</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.gridbox</module>
->>>>>>> origin/main
     <module>org.openhab.binding.groheondus</module>
 
     <module>org.openhab.binding.groupepsa</module>
@@ -430,11 +334,7 @@
     <module>org.openhab.binding.heos</module>
 
     <module>org.openhab.binding.herzborg</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.homeassistant</module>
->>>>>>> origin/main
     <module>org.openhab.binding.homeconnect</module>
 
     <module>org.openhab.binding.homematic</module>
@@ -446,11 +346,7 @@
     <module>org.openhab.binding.http</module>
 
     <module>org.openhab.binding.hue</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.huesync</module>
->>>>>>> origin/main
     <module>org.openhab.binding.hydrawise</module>
 
     <module>org.openhab.binding.hyperion</module>
@@ -472,11 +368,7 @@
     <module>org.openhab.binding.ipobserver</module>
 
     <module>org.openhab.binding.intesis</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.iotawatt</module>
->>>>>>> origin/main
     <module>org.openhab.binding.ipp</module>
 
     <module>org.openhab.binding.irobot</module>
@@ -490,12 +382,6 @@
     <module>org.openhab.binding.jeelink</module>
 
     <module>org.openhab.binding.jellyfin</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.juicenet</module>
-
-=======
->>>>>>> origin/main
     <module>org.openhab.binding.kaleidescape</module>
 
     <module>org.openhab.binding.keba</module>
@@ -521,11 +407,7 @@
     <module>org.openhab.binding.lghombot</module>
 
     <module>org.openhab.binding.lgtvserial</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.lgthinq</module>
->>>>>>> origin/main
     <module>org.openhab.binding.lgwebos</module>
 
     <module>org.openhab.binding.lifx</module>
@@ -533,11 +415,7 @@
     <module>org.openhab.binding.linky</module>
 
     <module>org.openhab.binding.linuxinput</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.linktap</module>
->>>>>>> origin/main
     <module>org.openhab.binding.liquidcheck</module>
 
     <module>org.openhab.binding.lirc</module>
@@ -557,11 +435,7 @@
     <module>org.openhab.binding.magentatv</module>
 
     <module>org.openhab.binding.mail</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.matter</module>
->>>>>>> origin/main
     <module>org.openhab.binding.max</module>
 
     <module>org.openhab.binding.mcd</module>
@@ -575,15 +449,6 @@
     <module>org.openhab.binding.melcloud</module>
 
     <module>org.openhab.binding.mercedesme</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.meteoalerte</module>
-
-    <module>org.openhab.binding.meteoblue</module>
-
-    <module>org.openhab.binding.meteostick</module>
-
-=======
     <module>org.openhab.binding.meross</module>
     <module>org.openhab.binding.meteoblue</module>
     <module>org.openhab.binding.meteofrance</module>
@@ -591,7 +456,6 @@
     <module>org.openhab.binding.metofficedatahub</module>
     <module>org.openhab.binding.mffan</module>
     <module>org.openhab.binding.mideaac</module>
->>>>>>> origin/main
     <module>org.openhab.binding.miele</module>
 
     <module>org.openhab.binding.mielecloud</module>
@@ -611,13 +475,9 @@
     <module>org.openhab.binding.modbus</module>
 
     <module>org.openhab.binding.modbus.e3dc</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.modbus.foxinverter</module>
     <module>org.openhab.binding.modbus.kermi</module>
     <module>org.openhab.binding.modbus.lambda</module>
->>>>>>> origin/main
     <module>org.openhab.binding.modbus.sbc</module>
 
     <module>org.openhab.binding.modbus.studer</module>
@@ -637,27 +497,13 @@
     <module>org.openhab.binding.mpd</module>
 
     <module>org.openhab.binding.mqtt</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.mqtt.espmilighthub</module>
-
-    <module>org.openhab.binding.mqtt.generic</module>
-
-    <module>org.openhab.binding.mqtt.homeassistant</module>
-
-=======
     <module>org.openhab.binding.mqtt.awtrixlight</module>
     <module>org.openhab.binding.mqtt.espmilighthub</module>
     <module>org.openhab.binding.mqtt.fpp</module>
->>>>>>> origin/main
     <module>org.openhab.binding.mqtt.homie</module>
 
     <module>org.openhab.binding.mqtt.ruuvigateway</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.mspa</module>
->>>>>>> origin/main
     <module>org.openhab.binding.mybmw</module>
 
     <module>org.openhab.binding.mycroft</module>
@@ -665,11 +511,7 @@
     <module>org.openhab.binding.mynice</module>
 
     <module>org.openhab.binding.mystrom</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.myuplink</module>
->>>>>>> origin/main
     <module>org.openhab.binding.nanoleaf</module>
 
     <module>org.openhab.binding.neato</module>
@@ -687,12 +529,6 @@
     <module>org.openhab.binding.networkupstools</module>
 
     <module>org.openhab.binding.nibeheatpump</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.nibeuplink</module>
-
-=======
->>>>>>> origin/main
     <module>org.openhab.binding.nikobus</module>
 
     <module>org.openhab.binding.nikohomecontrol</module>
@@ -716,11 +552,7 @@
     <module>org.openhab.binding.omnikinverter</module>
 
     <module>org.openhab.binding.omnilink</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.ondilo</module>
->>>>>>> origin/main
     <module>org.openhab.binding.onebusaway</module>
 
     <module>org.openhab.binding.onewiregpio</module>
@@ -750,19 +582,11 @@
     <module>org.openhab.binding.panasonicbdp</module>
 
     <module>org.openhab.binding.paradoxalarm</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.pegelonline</module>
->>>>>>> origin/main
     <module>org.openhab.binding.pentair</module>
 
     <module>org.openhab.binding.phc</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.pihole</module>
->>>>>>> origin/main
     <module>org.openhab.binding.pilight</module>
 
     <module>org.openhab.binding.pioneeravr</module>
@@ -816,19 +640,11 @@
     <module>org.openhab.binding.resol</module>
 
     <module>org.openhab.binding.rfxcom</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.ring</module>
->>>>>>> origin/main
     <module>org.openhab.binding.rme</module>
 
     <module>org.openhab.binding.robonect</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.roborock</module>
->>>>>>> origin/main
     <module>org.openhab.binding.roku</module>
 
     <module>org.openhab.binding.rotel</module>
@@ -836,21 +652,11 @@
     <module>org.openhab.binding.russound</module>
 
     <module>org.openhab.binding.sagercaster</module>
-<<<<<<< HEAD
-
-    <module>org.openhab.binding.saicismart</module>
-
-=======
     <module>org.openhab.binding.salus</module>
->>>>>>> origin/main
     <module>org.openhab.binding.samsungtv</module>
 
     <module>org.openhab.binding.satel</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.sbus</module>
->>>>>>> origin/main
     <module>org.openhab.binding.semsportal</module>
 
     <module>org.openhab.binding.senechome</module>
@@ -858,11 +664,7 @@
     <module>org.openhab.binding.seneye</module>
 
     <module>org.openhab.binding.sensebox</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.senseenergy</module>
->>>>>>> origin/main
     <module>org.openhab.binding.sensibo</module>
 
     <module>org.openhab.binding.sensorcommunity</module>
@@ -874,11 +676,7 @@
     <module>org.openhab.binding.shelly</module>
 
     <module>org.openhab.binding.silvercrestwifisocket</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.siemenshvac</module>
->>>>>>> origin/main
     <module>org.openhab.binding.siemensrds</module>
 
     <module>org.openhab.binding.sinope</module>
@@ -906,21 +704,13 @@
     <module>org.openhab.binding.solarforecast</module>
 
     <module>org.openhab.binding.solarlog</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.solarman</module>
->>>>>>> origin/main
     <module>org.openhab.binding.solarmax</module>
 
     <module>org.openhab.binding.solarwatt</module>
 
     <module>org.openhab.binding.solax</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.somfycul</module>
->>>>>>> origin/main
     <module>org.openhab.binding.somfymylink</module>
 
     <module>org.openhab.binding.somfytahoma</module>
@@ -942,11 +732,7 @@
     <module>org.openhab.binding.spotify</module>
 
     <module>org.openhab.binding.squeezebox</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.sunsynk</module>
->>>>>>> origin/main
     <module>org.openhab.binding.surepetcare</module>
 
     <module>org.openhab.binding.synopanalyzer</module>
@@ -970,12 +756,8 @@
     <module>org.openhab.binding.tellstick</module>
 
     <module>org.openhab.binding.tesla</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.teslapowerwall</module>
     <module>org.openhab.binding.teslascope</module>
->>>>>>> origin/main
     <module>org.openhab.binding.tibber</module>
 
     <module>org.openhab.binding.tivo</module>
@@ -989,11 +771,7 @@
     <module>org.openhab.binding.tr064</module>
 
     <module>org.openhab.binding.tradfri</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.tuya</module>
->>>>>>> origin/main
     <module>org.openhab.binding.unifi</module>
 
     <module>org.openhab.binding.unifiedremote</module>
@@ -1023,11 +801,7 @@
     <module>org.openhab.binding.vesync</module>
 
     <module>org.openhab.binding.vigicrues</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.visualcrossing</module>
->>>>>>> origin/main
     <module>org.openhab.binding.vitotronic</module>
 
     <module>org.openhab.binding.vizio</module>
@@ -1051,11 +825,7 @@
     <module>org.openhab.binding.wifiled</module>
 
     <module>org.openhab.binding.windcentrale</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.wiz</module>
->>>>>>> origin/main
     <module>org.openhab.binding.wlanthermo</module>
 
     <module>org.openhab.binding.wled</module>
@@ -1079,11 +849,7 @@
     <module>org.openhab.binding.yeelight</module>
 
     <module>org.openhab.binding.zoneminder</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.binding.zwavejs</module>
->>>>>>> origin/main
     <module>org.openhab.binding.zway</module>
 
     <!-- persistence -->
@@ -1115,11 +881,7 @@
     <module>org.openhab.voice.marytts</module>
 
     <module>org.openhab.voice.mimictts</module>
-<<<<<<< HEAD
-
-=======
     <module>org.openhab.voice.openaitts</module>
->>>>>>> origin/main
     <module>org.openhab.voice.picotts</module>
 
     <module>org.openhab.voice.pipertts</module>
@@ -1133,12 +895,7 @@
     <module>org.openhab.voice.voskstt</module>
 
     <module>org.openhab.voice.watsonstt</module>
-<<<<<<< HEAD
-
-
-=======
     <module>org.openhab.voice.whisperstt</module>
->>>>>>> origin/main
   </modules>
 
   <properties>
@@ -1446,13 +1203,7 @@
         <groupId>org.apache.maven.plugins</groupId>
 
         <artifactId>maven-dependency-plugin</artifactId>
-<<<<<<< HEAD
-
-        <version>3.6.1</version>
-
-=======
         <version>3.9.0</version>
->>>>>>> origin/main
         <executions>
 
           <execution>
@@ -1526,9 +1277,6 @@
         </executions>
 
       </plugin>
-<<<<<<< HEAD
-
-=======
       <!-- 1. Download XSD -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1597,15 +1345,11 @@
           </execution>
         </executions>
       </plugin>
->>>>>>> origin/main
     </plugins>
 
   </build>
 
   <profiles>
-<<<<<<< HEAD
-
-=======
     <profile>
       <id>skipXmlValidation</id>
       <activation>
@@ -1625,7 +1369,6 @@
         </plugins>
       </build>
     </profile>
->>>>>>> origin/main
     <!-- suppress embedding of dependencies -->
 
     <profile>

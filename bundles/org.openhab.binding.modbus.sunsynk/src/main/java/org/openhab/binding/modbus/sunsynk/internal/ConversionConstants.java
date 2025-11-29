@@ -95,4 +95,29 @@ final class ConversionConstants {
 
         return new BigDecimal(dateTime.toEpochSecond(ZoneOffset.UTC));
     };
+
+    /**
+     * System time conversion from 3 registers (22, 23, 24).
+     * Register format: [0]=year/month, [1]=day/hour, [2]=minute/second
+     * Year: (reg[0] >> 8) + 2000, Month: reg[0] & 0xFF
+     * Day: (reg[1] >> 8), Hour: reg[1] & 0xFF
+     * Minute: (reg[2] >> 8), Second: reg[2] & 0xFF
+     */
+    static final Function<BigDecimal[], LocalDateTime> SYSTEM_TIME = (BigDecimal[] regs) -> {
+        if (regs.length != 3) {
+            throw new IllegalArgumentException("SYSTEM_TIME requires exactly 3 registers");
+        }
+        int reg0 = regs[0].intValue();
+        int reg1 = regs[1].intValue();
+        int reg2 = regs[2].intValue();
+
+        int year = ((reg0 >> 8) & 0xFF) + 2000;
+        int month = reg0 & 0xFF;
+        int day = (reg1 >> 8) & 0xFF;
+        int hour = reg1 & 0xFF;
+        int minute = (reg2 >> 8) & 0xFF;
+        int second = reg2 & 0xFF;
+
+        return LocalDateTime.of(year, month, day, hour, minute, second);
+    };
 }

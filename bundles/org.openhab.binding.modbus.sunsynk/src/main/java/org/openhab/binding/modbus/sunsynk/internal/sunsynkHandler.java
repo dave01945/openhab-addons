@@ -13,6 +13,8 @@
 package org.openhab.binding.modbus.sunsynk.internal;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import org.openhab.core.io.transport.modbus.ModbusReadFunctionCode;
 import org.openhab.core.io.transport.modbus.ModbusReadRequestBlueprint;
 import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
 import org.openhab.core.io.transport.modbus.ModbusWriteRegisterRequestBlueprint;
+import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -83,13 +86,8 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
     private int inverterPower;
     private int auxPower;
-    private int gridPower;
     private int gridL1Power;
-    private int gridL2Power;
     private int ctPower;
-    private int loadPower;
-    private int loadPowerL1;
-    private int loadPowerL2;
     private int[] timerStart = new int[6];
 
     public sunsynkHandler(Thing thing) {
@@ -140,8 +138,15 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                         this::readError //
                 );
             }
-        } else if (channelUID.getGroupId().equals("ss-settings-solar")
-                || channelUID.getGroupId().equals("ss-settings-timer")) {
+        } else if ("ss-system-time".equals(channelUID.getIdWithoutGroup())) {
+            // Handle system time write (registers 22, 23, 24)
+            if (command instanceof DateTimeType) {
+                submitSystemTimeWrite((DateTimeType) command);
+            }
+        } else if ("ss-settings-solar".equals(channelUID.getGroupId())
+                || "ss-settings-timer".equals(channelUID.getGroupId())
+                || "ss-settings-battery".equals(channelUID.getGroupId())
+                || "ss-settings-advanced".equals(channelUID.getGroupId())) {
             String id = channelUID.getIdWithoutGroup();
             for (SunsynkInverterRegisters channel : SunsynkInverterRegisters.values()) {
                 if (id.equals("ss-" + channel.getChannelName())) {
@@ -266,6 +271,42 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         });
     }
 
+    private void submitSystemTimeWrite(DateTimeType dateTimeCommand) {
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeCommand.toString());
+        LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+
+        int year = localDateTime.getYear() - 2000;
+        int month = localDateTime.getMonthValue();
+        int day = localDateTime.getDayOfMonth();
+        int hour = localDateTime.getHour();
+        int minute = localDateTime.getMinute();
+        int second = localDateTime.getSecond();
+
+        // Pack into 3 registers
+        int reg22 = (year << 8) | month; // year/month
+        int reg23 = (day << 8) | hour; // day/hour
+        int reg24 = (minute << 8) | second; // minute/second
+
+        byte[] bytes = new byte[6];
+        bytes[0] = (byte) (reg22 >> 8);
+        bytes[1] = (byte) reg22;
+        bytes[2] = (byte) (reg23 >> 8);
+        bytes[3] = (byte) reg23;
+        bytes[4] = (byte) (reg24 >> 8);
+        bytes[5] = (byte) reg24;
+
+        ModbusRegisterArray regArray = new ModbusRegisterArray(bytes);
+        ModbusWriteRegisterRequestBlueprint request = new ModbusWriteRegisterRequestBlueprint(getSlaveId(), 22,
+                regArray, true, TRIES);
+
+        submitOneTimeWrite(request, result -> {
+            logger.debug("System time write success: {}-{:02}-{:02} {:02}:{:02}:{:02}", year + 2000, month, day, hour,
+                    minute, second);
+        }, failure -> {
+            logger.error("System time write failed - {}", failure.getCause().toString());
+        });
+    }
+
     @Override
     public void modbusInitialize() {
         final SunsynkInverterConfiguration config = getConfigAs(SunsynkInverterConfiguration.class);
@@ -301,7 +342,29 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 int index = channel.getRegisterNumber() - firstRegister;
                 setVariables(channel, registers, index);
 
-                if (channel.getRegisterNumber2() != -1) {
+                // Special handling for system time (3 registers: 22, 23, 24)
+                if (channel.getRegisterNumber() == 22 && index + 2 < registers.size()) {
+                    int reg0 = registers.getRegister(index); // year/month
+                    int reg1 = registers.getRegister(index + 1); // day/hour
+                    int reg2 = registers.getRegister(index + 2); // minute/second
+
+                    int year = ((reg0 >> 8) & 0xFF) + 2000;
+                    int month = reg0 & 0xFF;
+                    int day = (reg1 >> 8) & 0xFF;
+                    int hour = reg1 & 0xFF;
+                    int minute = (reg2 >> 8) & 0xFF;
+                    int second = reg2 & 0xFF;
+
+                    try {
+                        LocalDateTime dateTime = LocalDateTime.of(year, month, day, hour, minute, second);
+                        ZonedDateTime zonedDateTime = ZonedDateTime.of(dateTime, ZoneId.systemDefault());
+                        DateTimeType dateTimeType = new DateTimeType(zonedDateTime);
+                        updateState(createChannelUid(channel), dateTimeType);
+                    } catch (Exception e) {
+                        logger.warn("Invalid system time values: {}-{}-{} {}:{}:{}", year, month, day, hour, minute,
+                                second);
+                    }
+                } else if (channel.getRegisterNumber2() != -1) {
                     int index2 = channel.getRegisterNumber2() - firstRegister;
                     int splitRegister1Data = registers.getRegister(index);
                     int splitRegister2Data = registers.getRegister(index2);

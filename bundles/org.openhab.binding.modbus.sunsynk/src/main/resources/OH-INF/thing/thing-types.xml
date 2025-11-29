@@ -21,7 +21,9 @@
 			<channel-group id="ss-load-information" typeId="ss-load-information"/>
 			<channel-group id="ss-inverter-information" typeId="ss-inverter-information"/>
 			<channel-group id="ss-settings-solar" typeId="ss-settings-solar"/>
+			<channel-group id="ss-settings-battery" typeId="ss-settings-battery"/>
 			<channel-group id="ss-settings-timer" typeId="ss-settings-timer"/>
+			<channel-group id="ss-settings-advanced" typeId="ss-settings-advanced"/>
 		</channel-groups>
 		<config-description-ref uri="thing-type:sunsynk:inverter"/>
 	</thing-type>
@@ -36,6 +38,8 @@
 			<channel id="ss-daily-reactive-energy" typeId="ss-daily-reactive-energy"/>
 			<channel id="ss-total-active-energy" typeId="ss-total-active-energy"/>
 			<channel id="ss-rated-power" typeId="ss-rated-power"/>
+			<channel id="ss-system-time" typeId="ss-system-time"/>
+			<channel id="ss-sd-status" typeId="ss-sd-status"/>
 			<channel id="ss-internal-ac-temperature" typeId="ss-internal-ac-temperature"/>
 			<channel id="ss-internal-dc-temperature" typeId="ss-internal-dc-temperature"/>
 			<channel id="ss-external-temperature" typeId="ss-external-temperature"/>
@@ -51,6 +55,12 @@
 			<channel id="ss-mppt2-voltage" typeId="ss-mppt2-voltage"/>
 			<channel id="ss-mppt2-current" typeId="ss-mppt2-current"/>
 			<channel id="ss-mppt2-power" typeId="ss-mppt2-power"/>
+			<channel id="ss-mppt3-voltage" typeId="ss-mppt3-voltage"/>
+			<channel id="ss-mppt3-current" typeId="ss-mppt3-current"/>
+			<channel id="ss-mppt3-power" typeId="ss-mppt3-power"/>
+			<channel id="ss-mppt4-voltage" typeId="ss-mppt4-voltage"/>
+			<channel id="ss-mppt4-current" typeId="ss-mppt4-current"/>
+			<channel id="ss-mppt4-power" typeId="ss-mppt4-power"/>
 			<channel id="ss-daily-pv-generation" typeId="ss-daily-pv-generation"/>
 			<channel id="ss-monthly-pv-energy" typeId="ss-monthly-pv-energy"/>
 			<channel id="ss-year-pv-energy" typeId="ss-year-pv-energy"/>
@@ -68,6 +78,9 @@
 			<channel id="ss-battery-soc" typeId="ss-battery-soc"/>
 			<channel id="ss-battery-corrected-ah" typeId="ss-battery-corrected-ah"/>
 			<channel id="ss-battery-temperature" typeId="ss-battery-temperature"/>
+			<channel id="ss-battery-charging-voltage" typeId="ss-battery-charging-voltage"/>
+			<channel id="ss-bat1-soc" typeId="ss-bat1-soc"/>
+			<channel id="ss-bat1-cycle" typeId="ss-bat1-cycle"/>
 			<channel id="ss-daily-battery-charge" typeId="ss-daily-battery-charge"/>
 			<channel id="ss-daily-battery-discharge-energy" typeId="ss-daily-battery-discharge-energy"/>
 			<channel id="ss-total-battery-charge" typeId="ss-total-battery-charge"/>
@@ -102,11 +115,14 @@
 		<label>Load Information</label>
 		<channels>
 			<channel id="ss-aux-load-power" typeId="ss-aux-load-power"/>
+			<channel id="ss-aux-voltage" typeId="ss-aux-voltage"/>
+			<channel id="ss-aux-frequency" typeId="ss-aux-frequency"/>
 			<channel id="ss-essential-load-power" typeId="ss-essential-load-power"/>
 			<channel id="ss-non-essential-load-power" typeId="ss-non-essential-load-power"/>
 			<channel id="ss-load-power" typeId="ss-load-power"/>
 			<channel id="ss-load-power-1" typeId="ss-load-power-1"/>
 			<channel id="ss-load-power-2" typeId="ss-load-power-2"/>
+			<channel id="ss-load-frequency" typeId="ss-load-frequency"/>
 			<channel id="ss-daily-load-energy-consumption" typeId="ss-daily-load-energy-consumption"/>
 			<channel id="ss-monthly-load-energy" typeId="ss-monthly-load-energy"/>
 			<channel id="ss-year-load-energy" typeId="ss-year-load-energy"/>
@@ -140,6 +156,12 @@
 			<channel id="ss-setting-prog4-power" typeId="ss-setting-prog4-power"/>
 			<channel id="ss-setting-prog5-power" typeId="ss-setting-prog5-power"/>
 			<channel id="ss-setting-prog6-power" typeId="ss-setting-prog6-power"/>
+			<channel id="ss-setting-prog1-voltage" typeId="ss-setting-prog1-voltage"/>
+			<channel id="ss-setting-prog2-voltage" typeId="ss-setting-prog2-voltage"/>
+			<channel id="ss-setting-prog3-voltage" typeId="ss-setting-prog3-voltage"/>
+			<channel id="ss-setting-prog4-voltage" typeId="ss-setting-prog4-voltage"/>
+			<channel id="ss-setting-prog5-voltage" typeId="ss-setting-prog5-voltage"/>
+			<channel id="ss-setting-prog6-voltage" typeId="ss-setting-prog6-voltage"/>
 			<channel id="ss-setting-prog1-cap" typeId="ss-setting-prog1-cap"/>
 			<channel id="ss-setting-prog2-cap" typeId="ss-setting-prog2-cap"/>
 			<channel id="ss-setting-prog3-cap" typeId="ss-setting-prog3-cap"/>
@@ -171,6 +193,40 @@
 			<channel id="ss-setting-grid-charge" typeId="ss-setting-grid-charge"/>
 			<channel id="ss-setting-solar-export" typeId="ss-setting-solar-export"/>
 			<channel id="ss-setting-gen-input" typeId="ss-setting-gen-input"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="ss-settings-battery">
+		<label>Battery Settings</label>
+		<category>Battery</category>
+		<channels>
+			<channel id="ss-setting-batt-equalization-volt" typeId="ss-setting-batt-equalization-volt"/>
+			<channel id="ss-setting-batt-absorption-volt" typeId="ss-setting-batt-absorption-volt"/>
+			<channel id="ss-setting-batt-float-volt" typeId="ss-setting-batt-float-volt"/>
+			<channel id="ss-setting-batt-max-charge-current" typeId="ss-setting-batt-max-charge-current"/>
+			<channel id="ss-setting-batt-max-discharge-current" typeId="ss-setting-batt-max-discharge-current"/>
+			<channel id="ss-setting-batt-shutdown-cap" typeId="ss-setting-batt-shutdown-cap"/>
+			<channel id="ss-setting-batt-restart-cap" typeId="ss-setting-batt-restart-cap"/>
+			<channel id="ss-setting-batt-low-cap" typeId="ss-setting-batt-low-cap"/>
+			<channel id="ss-setting-batt-shutdown-volt" typeId="ss-setting-batt-shutdown-volt"/>
+			<channel id="ss-setting-batt-restart-volt" typeId="ss-setting-batt-restart-volt"/>
+			<channel id="ss-setting-batt-low-volt" typeId="ss-setting-batt-low-volt"/>
+			<channel id="ss-setting-grid-charge-batt-current" typeId="ss-setting-grid-charge-batt-current"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="ss-settings-advanced">
+		<label>Advanced Settings</label>
+		<category>Energy</category>
+		<channels>
+			<channel id="ss-setting-inverter-enabled" typeId="ss-setting-inverter-enabled"/>
+			<channel id="ss-setting-max-solar-power" typeId="ss-setting-max-solar-power"/>
+			<channel id="ss-control-mode" typeId="ss-control-mode"/>
+			<channel id="ss-setting-max-sell-power" typeId="ss-setting-max-sell-power"/>
+			<channel id="ss-setting-peak-shaving" typeId="ss-setting-peak-shaving"/>
+			<channel id="ss-setting-gen-peak-shaving-power" typeId="ss-setting-gen-peak-shaving-power"/>
+			<channel id="ss-setting-grid-peak-shaving-power" typeId="ss-setting-grid-peak-shaving-power"/>
+			<channel id="ss-bms-protocol" typeId="ss-bms-protocol"/>
 		</channels>
 	</channel-group-type>
 
@@ -400,6 +456,16 @@
 			<tag>Power</tag>
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-system-time">
+		<item-type>DateTime</item-type>
+		<label>System Time</label>
+		<category>Time</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Timestamp</tag>
+		</tags>
+		<state readOnly="false"/>
 	</channel-type>
 	<channel-type id="ss-grid-ct-power">
 		<item-type>Number:Power</item-type>
@@ -1117,6 +1183,272 @@
 				<option value="4">General</option>
 				<option value="8">Backup</option>
 				<option value="16">Charge</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<!-- Timer voltage settings -->
+	<channel-type id="ss-setting-prog1-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 1 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog2-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 2 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog3-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 3 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog4-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 4 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog5-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 5 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-prog6-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Timer program 6 voltage</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+
+	<!-- MPPT 3 and 4 channels -->
+	<channel-type id="ss-mppt3-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>MPPT3 Voltage</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-mppt3-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>MPPT3 Current</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-mppt3-power">
+		<item-type>Number:Power</item-type>
+		<label>MPPT3 Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-mppt4-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>MPPT4 Voltage</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-mppt4-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>MPPT4 Current</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-mppt4-power">
+		<item-type>Number:Power</item-type>
+		<label>MPPT4 Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<!-- Load information channels -->
+	<channel-type id="ss-load-frequency">
+		<item-type>Number:Frequency</item-type>
+		<label>Load Frequency</label>
+		<category>Energy</category>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-aux-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>AUX Voltage</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-aux-frequency">
+		<item-type>Number:Frequency</item-type>
+		<label>AUX Frequency</label>
+		<category>Energy</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<!-- Battery information channels -->
+	<channel-type id="ss-battery-charging-voltage">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Charging Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-bat1-soc">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery 1 SOC</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-bat1-cycle">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery 1 Cycle Count</label>
+		<category>Battery</category>
+		<state pattern="%d" readOnly="true"/>
+	</channel-type>
+
+	<!-- Overview channels -->
+	<channel-type id="ss-sd-status">
+		<item-type>Number:Dimensionless</item-type>
+		<label>SD Card Status</label>
+		<category>Status</category>
+		<state pattern="%d" readOnly="true"/>
+	</channel-type>
+
+	<!-- Battery settings channels -->
+	<channel-type id="ss-setting-batt-equalization-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Equalization Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-absorption-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Absorption Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-float-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Float Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-max-charge-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Battery Max Charge Current</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-max-discharge-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Battery Max Discharge Current</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-shutdown-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Shutdown Capacity</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-restart-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Restart Capacity</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-low-cap">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Battery Low Capacity</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-shutdown-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Shutdown Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-restart-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Restart Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-batt-low-volt">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Battery Low Voltage</label>
+		<category>Battery</category>
+		<state pattern="%.2f %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-grid-charge-batt-current">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Grid Charge Battery Current</label>
+		<category>Battery</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+
+	<!-- Advanced settings channels -->
+	<channel-type id="ss-setting-inverter-enabled">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Inverter Enabled</label>
+		<category>Energy</category>
+		<state pattern="%d" readOnly="false">
+			<options>
+				<option value="0">Off</option>
+				<option value="1">On</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="ss-setting-max-solar-power">
+		<item-type>Number:Power</item-type>
+		<label>Max Solar Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-control-mode">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Control Mode</label>
+		<category>Energy</category>
+		<state pattern="%d" readOnly="true"/>
+	</channel-type>
+	<channel-type id="ss-setting-max-sell-power">
+		<item-type>Number:Power</item-type>
+		<label>Max Sell Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-peak-shaving">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Peak Shaving Settings</label>
+		<category>Energy</category>
+		<state pattern="%d" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-gen-peak-shaving-power">
+		<item-type>Number:Power</item-type>
+		<label>Generator Peak Shaving Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-setting-grid-peak-shaving-power">
+		<item-type>Number:Power</item-type>
+		<label>Grid Peak Shaving Power</label>
+		<category>Energy</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+	<channel-type id="ss-bms-protocol">
+		<item-type>Number:Dimensionless</item-type>
+		<label>BMS Protocol</label>
+		<category>Energy</category>
+		<state pattern="%d" readOnly="false">
+			<options>
+				<option value="0">PYLON CAN</option>
+				<option value="1">SACRED SUN RS485</option>
+				<option value="3">DYNESS CAN</option>
+				<option value="6">GenixGreen RS485</option>
+				<option value="12">PYLON RS485</option>
+				<option value="13">VISION CAN</option>
+				<option value="14">WATTSONIC RS485</option>
+				<option value="15">UNIPOWER RS485</option>
+				<option value="17">LD RS485</option>
+				<option value="19">UNKNOWN RS485</option>
 			</options>
 		</state>
 	</channel-type>
