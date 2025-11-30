@@ -791,8 +791,6 @@
 		<item-type>Switch</item-type>
 		<label>Grid State</label>
 		<category>Energy</category>
-		<tags>
-		</tags>
 		<state pattern="%.2f %unit%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="ss-total-active-energy" advanced="true">

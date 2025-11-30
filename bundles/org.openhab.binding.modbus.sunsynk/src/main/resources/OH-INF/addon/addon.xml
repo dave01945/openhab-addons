@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon:addon id="modbus.sunsynk"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<addon:addon id="modbus-sunsynk" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:addon="https://openhab.org/schemas/addon/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/addon/v1.0.0 https://openhab.org/schemas/addon-1.0.0.xsd">
 
 	<type>binding</type>
 	<name>Sunsynk Modbus Binding</name>
-	<description>This binding integrates Sunsynk solar inverters with openHAB through the Modbus protocol, providing comprehensive monitoring and control capabilities for solar power systems including battery management, MPPT tracking, grid interaction, and programmable timer settings.</description>
-	<connection>serial,network</connection>
-	<countries>ZA,GB,AU,US,EU</countries>
+	<description>This binding integrates Sunsynk solar inverters with openHAB through the Modbus protocol, providing
+		comprehensive monitoring and control capabilities for solar power systems including battery management, MPPT tracking,
+		grid interaction, and programmable timer settings.</description>
+	<connection>local</connection>
+	<countries>za,gb,au,us,eu</countries>
 
-	<service-id>org.openhab.binding.modbus.sunsynk</service-id>
+	<service-id>modbus-sunsynk</service-id>
 
 </addon:addon>

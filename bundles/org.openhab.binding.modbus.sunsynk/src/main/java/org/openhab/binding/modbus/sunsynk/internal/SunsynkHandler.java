@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -307,8 +307,7 @@ public class SunsynkHandler extends BaseModbusThingHandler {
                 regArray, true, TRIES);
 
         submitOneTimeWrite(request, result -> {
-            logger.debug("System time write success: {}-{:02}-{:02} {:02}:{:02}:{:02}", year + 2000, month, day, hour,
-                    minute, second);
+            logger.debug("System time write success: {}-{}-{} {}:{}:{}", year + 2000, month, day, hour, minute, second);
         }, failure -> {
             logger.error("System time write failed - {}", failure.getCause().toString());
         });
@@ -369,7 +368,7 @@ public class SunsynkHandler extends BaseModbusThingHandler {
                         updateState(createChannelUid(channel), dateTimeType);
                     } catch (Exception e) {
                         logger.warn("Invalid system time values: {}-{}-{} {}:{}:{}", year, month, day, hour, minute,
-                                second);
+                                second, e);
                     }
                 } else if (channel.getRegisterNumber2() != -1) {
                     int index2 = channel.getRegisterNumber2() - firstRegister;
