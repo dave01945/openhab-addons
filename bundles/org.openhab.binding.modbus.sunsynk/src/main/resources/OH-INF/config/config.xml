@@ -4,6 +4,10 @@
 	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
+	<!-- Binding-level configuration for logging and general settings -->
+	<config-description uri="binding:modbus.sunsynk">
+	</config-description>
+
 	<config-description uri="thing-type:sunsynk:inverter">
 		<parameter name="pollInterval" type="integer" required="true" min="100" unit="ms">
 			<label>Poll Interval</label>

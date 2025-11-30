@@ -8,15 +8,16 @@ This is an openHAB binding for Sunsynk inverters using Modbus protocol. It's par
 ## Architecture & Key Components
 
 ### Core Structure
-- **Handler Factory**: `ModbussunsynkHandlerFactory` - OSGi component that creates thing handlers
-- **Thing Handler**: `sunsynkHandler` - Extends `BaseModbusThingHandler` to manage Modbus communication
-- **Register Enum**: `SunsynkInverterRegisters` - Defines all Modbus registers with conversion logic
+- **Handler Factory**: `ModbussunsynkHandlerFactory` - OSGi component (`@Component`) that creates thing handlers
+- **Thing Handler**: `SunsynkHandler` - Extends `BaseModbusThingHandler` to manage Modbus communication and state tracking
+- **Register Enum**: `SunsynkInverterRegisters` - Defines all Modbus registers with conversion logic (400+ lines)
+- **Configuration**: `SunsynkInverterConfiguration` - Thing configuration class (slaveAddress, pollInterval)
 - **Constants**: `ModbussunsynkBindingConstants` - Thing type UIDs and channel identifiers
-- **Conversions**: `ConversionConstants` - Unit conversion functions (temperature Kelvin, decimal scaling)
+- **Conversions**: `ConversionConstants` - Unit conversion functions (temperature Kelvin, decimal scaling, time, bitmasks)
 
 ### Modbus Communication Pattern
 The binding splits register reads into batches respecting `ModbusConstants.MAX_REGISTERS_READ_COUNT`:
-- See `buildRequests()` in `sunsynkHandler` - creates optimized read requests
+- See `buildRequests()` in `SunsynkHandler` - creates optimized read requests
 - Uses `submitOneTimePoll()` for async reads with callbacks
 - Register gaps require multiple requests (e.g., registers 16-279 with non-contiguous ranges)
 
@@ -53,23 +54,24 @@ Follow task chain: `Build` task executes:
 3. `Copy Distribution to Addons` → copies JAR to `$openhab_addons`
 4. `Set permissions of addon` → `chown openhab:openhab`
 
-**Environment Setup**: Required environment variables for deployment tasks:
-- `$openhab_addons` - Path to openHAB addons directory (e.g., `/etc/openhab/addons`)
-- `$openhab_home` - openHAB installation directory
-- `$openhab_runtime` - openHAB runtime directory (for stop/start commands)
-- `$openhab_logs` - openHAB logs directory (e.g., `/var/log/openhab`)
+**Environment Setup**: Tasks in `.vscode/tasks.json` have hardcoded environment variables:
+- `openhab_addons` - Path to openHAB addons directory (default: `/usr/share/openhab/addons`)
+- `openhab_home` - openHAB installation directory (default: `/usr/share/openhab`)
+- `openhab_runtime` - openHAB runtime directory (default: `/usr/share/openhab/runtime`)
+- `openhab_logs` - openHAB logs directory (default: `/var/log/openhab`)
+- `dist` - JAR filename (e.g., `org.openhab.binding.modbus.sunsynk-5.1.0-SNAPSHOT.jar`)
 
-Set in your shell profile (`.bashrc`/`.zshrc`) or VS Code settings.
+**Adjust these paths in tasks.json** for your local environment or set as shell environment variables.
 
 ### Debugging
 - Task: "Start openHAB (Debug)" - launches with remote debugging
 - Task: "Tail openhab.log" or "Tail events.log" - monitor runtime logs
-- Logger: `LoggerFactory.getLogger(sunsynkHandler.class)`
+- Logger: `LoggerFactory.getLogger(SunsynkHandler.class)`
 
 ## Code Conventions
 
 ### Naming Patterns
-- **Classes**: CamelCase but handler class is `sunsynkHandler` (lowercase 's' - existing pattern)
+- **Classes**: CamelCase including handler class `SunsynkHandler`
 - **Channels**: Prefix `ss-` (sunsynk), group-based (e.g., `ss-battery-soc`)
 - **Registers**: SCREAMING_SNAKE_CASE in enum (e.g., `BATTERY_SOC`)
 - **OSGi annotations**: `@Component(configurationPid = "binding.modbus.sunsynk")`
@@ -96,7 +98,10 @@ Second register number for split registers: `TOTAL_GRID_IMPORT_ENERGY(78, 80, UI
 
 ### Timer Command Validation
 Timer slots must be sequential: prog1 < prog2 < prog3 < prog4 < prog5 < prog6
-See `fixTimerCommand()` for validation logic - enforces time ordering
+- See `fixTimerCommand()` in `SunsynkHandler` - validates and enforces time ordering
+- Minutes must be < 60; invalid minutes round up to next hour
+- Each timer slot checked against previous/next slot boundaries
+- Timer state tracked in `timerStart[]` array, updated in `setVariables()`
 
 ## XML Configuration
 
@@ -156,10 +161,11 @@ Async pattern in `readSuccessful()`:
 
 ## Known Issues & Quirks
 
-- Timer command format: DateTime strings parsed as `yyyy-MM-dd'T'HH:mm:ss.SSSZ`, converted to HHMM integer
-- Minutes validation: Enforces < 60, rounds to next hour if invalid
-- Register gaps: Some registers aren't contiguous (e.g., 78 vs 80 for split 32-bit values)
-- Power calculations: Load power derived from grid + battery + PV (see handler state tracking)
+- **Timer command format**: DateTime strings parsed as `yyyy-MM-dd'T'HH:mm:ss.SSSZ`, converted to HHMM integer
+- **Minutes validation**: Enforces < 60, rounds to next hour if invalid (see `fixTimerCommand()`)
+- **Register gaps**: Some registers aren't contiguous (e.g., 78 vs 80 for split 32-bit values)
+- **Derived calculations**: Handler tracks power variables (`inverterPower`, `auxPower`, `gridL1Power`, `ctPower`) in `setVariables()` for load power calculations
+- **State tracking**: Handler maintains instance variables updated during register reads for composite calculations
 
 ## Testing & Validation
 
@@ -169,3 +175,5 @@ Currently no unit tests in repository. Manual testing against actual Sunsynk har
 3. Add Sunsynk inverter thing
 4. Monitor logs for register read/write success
 5. Verify channel updates in UI or via REST API
+
+**Tip**: Use "Tail openhab.log" and "Tail events.log" tasks to watch runtime behavior in real-time.

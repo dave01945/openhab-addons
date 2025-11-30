@@ -38,13 +38,16 @@ import org.openhab.core.types.State;
 /**
  * The {@link SunsynkInverterRegisters} is responsible for defining Modbus registers and their units.
  *
- * @author David Jones - Intial contribution
+ * @author David Jones - Initial contribution
  */
 @NonNullByDefault
 public enum SunsynkInverterRegisters {
 
+    // Ordered by register number for optimal Modbus batching
     RATED_POWER(16, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.WATT), "overview"),
     SYSTEM_TIME(22, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "overview"),
+    SETTING_INVERTER_ENABLED(43, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
+    SETTING_MAX_SOLAR_POWER(53, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
     INVERTER_STATE(59, UINT16, BigDecimal.ONE, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     DAILY_ACTIVE_ENERGY(60, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
     DAILY_REACTIVE_ENERGY(61, INT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR), "overview"),
@@ -84,6 +87,7 @@ public enum SunsynkInverterRegisters {
             ConversionConstants.DIV_BY_TEMP_TEN, "overview"),
     INTERNAL_AC_TEMPERATURE(91, UINT16, BigDecimal.ONE, quantityFactory(Units.KELVIN),
             ConversionConstants.DIV_BY_TEMP_TEN, "overview"),
+    SD_STATUS(92, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "overview"),
     EXTERNAL_TEMPERATURE(95, UINT16, BigDecimal.ONE, quantityFactory(Units.KELVIN), ConversionConstants.DIV_BY_TEMP_TEN,
             "overview"),
     TOTAL_PV_GENERATION(96, UINT32_SWAP, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.KILOWATT_HOUR),
@@ -99,6 +103,10 @@ public enum SunsynkInverterRegisters {
     MPPT1_CURRENT(110, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     MPPT2_VOLTAGE(111, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
     MPPT2_CURRENT(112, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
+    MPPT3_VOLTAGE(113, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
+    MPPT3_CURRENT(114, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
+    MPPT4_VOLTAGE(115, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
+    MPPT4_CURRENT(116, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
     GRID_VOLTAGE(150, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "grid-information"),
     INVERTER_VOLTAGE(154, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "inverter-information"),
     GRID_CURRENT(160, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE), "grid-information"),
@@ -120,25 +128,18 @@ public enum SunsynkInverterRegisters {
     BATTERY_SOC(184, UINT16, BigDecimal.ONE, quantityFactory(Units.PERCENT), "battery-information"),
     MPPT1_POWER(186, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
     MPPT2_POWER(187, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
+    MPPT3_POWER(188, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
+    MPPT4_POWER(189, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
     BATTERY_POWER(190, INT16, BigDecimal.ONE, quantityFactory(Units.WATT), "battery-information"),
     BATTERY_CURRENT(191, INT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.AMPERE),
             "battery-information"),
+    AUX_VOLTAGE(181, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "load-information"),
+    LOAD_FREQUENCY(192, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ), "load-information"),
     INVERTER_FREQUENCY(193, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ),
             "inverter-information"),
     GRID_STATE(194, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "grid-information"),
-    LOAD_FREQUENCY(192, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.HERTZ), "load-information"),
-    AUX_VOLTAGE(181, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "load-information"),
     AUX_FREQUENCY(196, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.HERTZ), "load-information"),
-
-    // MPPT 3 and 4 for systems with 3 or 4 MPPT trackers
-    MPPT3_VOLTAGE(113, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
-    MPPT3_CURRENT(114, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
-    MPPT3_POWER(188, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
-    MPPT4_VOLTAGE(115, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.VOLT), "mppt-information"),
-    MPPT4_CURRENT(116, UINT16, ConversionConstants.DIV_BY_TEN, quantityFactory(Units.AMPERE), "mppt-information"),
-    MPPT4_POWER(189, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "mppt-information"),
-
-    // Battery settings - voltage management
+    CONTROL_MODE(200, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
     SETTING_BATT_EQUALIZATION_VOLT(201, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
             "settings-battery"),
     SETTING_BATT_ABSORPTION_VOLT(202, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
@@ -157,27 +158,11 @@ public enum SunsynkInverterRegisters {
     SETTING_BATT_LOW_VOLT(222, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
             "settings-battery"),
     SETTING_GRID_CHARGE_BATT_CURRENT(230, UINT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "settings-battery"),
-
-    // Advanced inverter settings
-    SETTING_INVERTER_ENABLED(43, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
-    SETTING_MAX_SOLAR_POWER(53, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
-    SD_STATUS(92, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "overview"),
-    CONTROL_MODE(200, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
-    SETTING_MAX_SELL_POWER(245, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
-    SETTING_PEAK_SHAVING(280, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
-    SETTING_GEN_PEAK_SHAVING_POWER(292, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
-    SETTING_GRID_PEAK_SHAVING_POWER(293, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
-    BATTERY_CHARGING_VOLTAGE(312, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
-            "battery-information"),
-    BMS_PROTOCOL(325, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
-    BAT1_SOC(603, UINT16, BigDecimal.ONE, quantityFactory(Units.PERCENT), "battery-information"),
-    BAT1_CYCLE(611, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "battery-information"),
-
-    SETTING_BATT_LOW(219, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_GRID_CHARGE(232, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_GEN_INPUT(235, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_LOAD_PRIORITY(243, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
     SETTING_LOAD_LIMIT(244, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
+    SETTING_MAX_SELL_POWER(245, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
     SETTING_SOLAR_EXPORT(247, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-solar"),
 
     SETTING_USE_TIMER(248, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), ConversionConstants.MASK_01,
@@ -241,9 +226,16 @@ public enum SunsynkInverterRegisters {
             "settings-timer"),
     SETTING_PROG6_VOLTAGE(267, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
             "settings-timer"),
-
+    SETTING_PEAK_SHAVING(280, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
+    SETTING_GEN_PEAK_SHAVING_POWER(292, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
+    SETTING_GRID_PEAK_SHAVING_POWER(293, UINT16, BigDecimal.ONE, quantityFactory(Units.WATT), "settings-advanced"),
+    BATTERY_CHARGING_VOLTAGE(312, UINT16, ConversionConstants.DIV_BY_HUNDRED, quantityFactory(Units.VOLT),
+            "battery-information"),
     BATTERY_CHARGE_LIMIT(314, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information"),
-    BATTERY_DISCHARGE_LIMIT(315, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information");
+    BATTERY_DISCHARGE_LIMIT(315, INT16, BigDecimal.ONE, quantityFactory(Units.AMPERE), "battery-information"),
+    BMS_PROTOCOL(325, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "settings-advanced"),
+    BAT1_SOC(603, UINT16, BigDecimal.ONE, quantityFactory(Units.PERCENT), "battery-information"),
+    BAT1_CYCLE(611, UINT16, BigDecimal.ONE, quantityFactory(Units.ONE), "battery-information");
 
     private final BigDecimal multiplier;
     private final int registerNumber;

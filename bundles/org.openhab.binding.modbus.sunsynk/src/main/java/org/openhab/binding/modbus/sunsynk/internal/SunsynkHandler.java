@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.modbus.sunsynk.internal;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -44,13 +45,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link sunsynkHandler} is responsible for handling commands, which are
+ * The {@link SunsynkHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author David Jones - Initial contribution
  */
 @NonNullByDefault
-public class sunsynkHandler extends BaseModbusThingHandler {
+public class SunsynkHandler extends BaseModbusThingHandler {
 
     private static final class ModbusRequest {
 
@@ -64,8 +65,11 @@ public class sunsynkHandler extends BaseModbusThingHandler {
 
         private ModbusReadRequestBlueprint initReadRequest(Deque<SunsynkInverterRegisters> registers, int slaveId) {
             int firstRegister = registers.getFirst().getRegisterNumber();
-            int lastRegister = registers.getLast().getRegisterNumber();
-            int length = lastRegister - firstRegister + registers.getLast().getRegisterCount();
+            SunsynkInverterRegisters lastReg = registers.getLast();
+            // Use getRegisterNumber2() for split registers, otherwise use getRegisterNumber()
+            int lastRegister = (lastReg.getRegisterNumber2() == -1) ? lastReg.getRegisterNumber()
+                    : lastReg.getRegisterNumber2();
+            int length = lastRegister - firstRegister + lastReg.getRegisterCount();
 
             assert length <= ModbusConstants.MAX_REGISTERS_READ_COUNT;
 
@@ -79,7 +83,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         }
     }
 
-    private final Logger logger = LoggerFactory.getLogger(sunsynkHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(SunsynkHandler.class);
 
     private static final int TRIES = 3;
     private List<ModbusRequest> modbusRequests = new ArrayList<>();
@@ -90,12 +94,13 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     private int ctPower;
     private int[] timerStart = new int[6];
 
-    public sunsynkHandler(Thing thing) {
+    public SunsynkHandler(Thing thing) {
         super(thing);
     }
 
     /**
      * Splits the Sunsynk InverterRegisters into multiple ModbusRequest, to ensure the max request size.
+     * Registers in the enum are already ordered by register number for optimal batching.
      */
     private List<ModbusRequest> buildRequests() {
         final List<ModbusRequest> requests = new ArrayList<>();
@@ -173,7 +178,7 @@ public class sunsynkHandler extends BaseModbusThingHandler {
         int command;
         if (comm % 100 > 59) {
             command = (comm - (comm % 100)) + 100;
-            logger.error("{} - Timmer minutes over 59", id);
+            logger.warn("{} - Timmer minutes over 59", id);
         } else {
             command = comm;
         }
@@ -182,42 +187,42 @@ public class sunsynkHandler extends BaseModbusThingHandler {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[0];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         } else if (id.contains("prog2")) {
             if (command > timerStart[0] && command < timerStart[2]) {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[1];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         } else if (id.contains("prog3")) {
             if (command > timerStart[1] && command < timerStart[3]) {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[2];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         } else if (id.contains("prog4")) {
             if (command > timerStart[2] && command < timerStart[4]) {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[3];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         } else if (id.contains("prog5")) {
             if (command > timerStart[3] && command < timerStart[5]) {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[4];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         } else if (id.contains("prog6")) {
             if (command > timerStart[4] && command < 2359) {
                 fixedCommand = command;
             } else {
                 fixedCommand = timerStart[5];
-                logger.error("{} - Timmer out of range", id);
+                logger.warn("{} - Timmer out of range", id);
             }
         }
         DecimalType commandRet = new DecimalType(fixedCommand);
@@ -272,8 +277,10 @@ public class sunsynkHandler extends BaseModbusThingHandler {
     }
 
     private void submitSystemTimeWrite(DateTimeType dateTimeCommand) {
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateTimeCommand.toString());
-        LocalDateTime localDateTime = zonedDateTime.toLocalDateTime();
+        // Convert from DateTimeType to LocalDateTime using Instant
+        // This avoids parsing issues with different datetime string formats
+        Instant instant = dateTimeCommand.getInstant();
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 
         int year = localDateTime.getYear() - 2000;
         int month = localDateTime.getMonthValue();

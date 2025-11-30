@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.modbus.sunsynk.internal;
 
-import static org.openhab.binding.modbus.sunsynk.internal.ModbussunsynkBindingConstants.*;
+import static org.openhab.binding.modbus.sunsynk.internal.ModbussunsynkBindingConstants.THING_TYPE_SUNSYNK_INVERTER;
 
 import java.util.Set;
 
@@ -47,7 +47,7 @@ public class ModbussunsynkHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_SUNSYNK_INVERTER.equals(thingTypeUID)) {
-            return new sunsynkHandler(thing);
+            return new SunsynkHandler(thing);
         }
 
         return null;
