@@ -34,6 +34,7 @@ import org.openhab.core.io.transport.modbus.ModbusRegisterArray;
 import org.openhab.core.io.transport.modbus.ModbusWriteRegisterRequestBlueprint;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -265,8 +266,18 @@ public class SunsynkHandler extends BaseModbusThingHandler {
     }
 
     private void submitWrite(Command command, SunsynkInverterRegisters channel) {
+        // Convert QuantityType to DecimalType by dividing by multiplier to get raw register value
+        Command writeCommand = command;
+        if (command instanceof QuantityType<?> quantityCommand) {
+            // Extract the numeric value and apply inverse of multiplier to get register value
+            writeCommand = new DecimalType(quantityCommand.toBigDecimal().divide(channel.getMultiplier()));
+        } else if (command instanceof DecimalType) {
+            // DecimalType also needs scaling by inverse multiplier
+            writeCommand = new DecimalType(((DecimalType) command).toBigDecimal().divide(channel.getMultiplier()));
+        }
+
         ModbusRegisterArray regArray = new ModbusRegisterArray(
-                ModbusBitUtilities.commandToRegisters(command, channel.getType()).getBytes());
+                ModbusBitUtilities.commandToRegisters(writeCommand, channel.getType()).getBytes());
         ModbusWriteRegisterRequestBlueprint request = new ModbusWriteRegisterRequestBlueprint(getSlaveId(),
                 channel.getRegisterNumber(), regArray, true, TRIES);
         submitOneTimeWrite(request, result -> {

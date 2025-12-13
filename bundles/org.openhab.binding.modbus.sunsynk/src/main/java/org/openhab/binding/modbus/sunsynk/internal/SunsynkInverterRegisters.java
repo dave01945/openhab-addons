@@ -389,6 +389,15 @@ public enum SunsynkInverterRegisters {
     }
 
     /**
+     * Returns the multiplier for converting register values.
+     * 
+     * @return the multiplier.
+     */
+    public BigDecimal getMultiplier() {
+        return this.multiplier;
+    }
+
+    /**
      * Creates the {@link State} for the given register value.
      *
      * @param registerValue the value for the channel.
