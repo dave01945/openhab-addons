@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -17,14 +17,16 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.fineoffsetweatherstation.internal.Utils;
+import org.openhab.core.util.StringUtils;
 
 /**
  * Class to collect debug details
  *
  * @author Andreas Berger - Initial contribution
  */
+@NonNullByDefault
 public class DebugDetails {
     final byte[] data;
 
@@ -71,7 +73,7 @@ public class DebugDetails {
         private String toDebugString(int padding) {
             String result = "0x";
             String hexString = Utils.toHexString(Arrays.copyOfRange(data, start, start + length), length, "");
-            result += StringUtils.rightPad(hexString, padding, " ");
+            result += StringUtils.padRight(hexString, padding, " ");
             result += ": " + description;
             return result;
         }

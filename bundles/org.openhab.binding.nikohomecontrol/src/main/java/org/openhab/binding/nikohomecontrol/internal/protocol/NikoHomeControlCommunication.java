@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,14 +21,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.nikohomecontrol.internal.protocol.nhc1.NikoHomeControlCommunication1;
-import org.openhab.binding.nikohomecontrol.internal.protocol.nhc2.NikoHomeControlCommunication2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The {@link NikoHomeControlCommunication} class is an abstract class representing the communication objects with the
- * Niko Home Control System. {@link NikoHomeControlCommunication1} or {@link NikoHomeControlCommunication2} should be
+ * Niko Home Control System.
+ * {@link org.openhab.binding.nikohomecontrol.internal.protocol.nhc1.NikoHomeControlCommunication1} or
+ * {@link org.openhab.binding.nikohomecontrol.internal.protocol.nhc2.NikoHomeControlCommunication2} should be
  * used for the respective version of Niko Home Control.
  * <ul>
  * <li>Start and stop communication with the Niko Home Control System.
@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  * @author Mark Herwege - Initial Contribution
+ * @author Mark Herwege - Add car chargers
  */
 @NonNullByDefault
 public abstract class NikoHomeControlCommunication {
@@ -46,7 +47,11 @@ public abstract class NikoHomeControlCommunication {
 
     protected final Map<String, NhcAction> actions = new ConcurrentHashMap<>();
     protected final Map<String, NhcThermostat> thermostats = new ConcurrentHashMap<>();
-    protected final Map<String, NhcEnergyMeter> energyMeters = new ConcurrentHashMap<>();
+    protected final Map<String, NhcMeter> meters = new ConcurrentHashMap<>();
+    protected final Map<String, NhcAccess> accessDevices = new ConcurrentHashMap<>();
+    protected final Map<String, NhcVideo> videoDevices = new ConcurrentHashMap<>();
+    protected final Map<String, NhcAlarm> alarmDevices = new ConcurrentHashMap<>();
+    protected final Map<String, NhcCarCharger> carChargerDevices = new ConcurrentHashMap<>();
 
     protected final NhcControllerEvent handler;
 
@@ -96,8 +101,6 @@ public abstract class NikoHomeControlCommunication {
      */
     public synchronized void restartCommunication() {
         resetCommunication();
-
-        logger.debug("restart communication from thread {}", Thread.currentThread().getId());
 
         startCommunication();
     }
@@ -166,12 +169,48 @@ public abstract class NikoHomeControlCommunication {
     }
 
     /**
-     * Return all energyMeters meters in the Niko Home Control Controller.
+     * Return all meters in the Niko Home Control Controller.
      *
-     * @return <code>Map&lt;String, {@link NhcEnergyMeter}></code>
+     * @return <code>Map&ltString, {@link NhcMeter}></code>
      */
-    public Map<String, NhcEnergyMeter> getEnergyMeters() {
-        return energyMeters;
+    public Map<String, NhcMeter> getMeters() {
+        return meters;
+    }
+
+    /**
+     * Return all access devices in the Niko Home Control Controller.
+     *
+     * @return <code>Map&ltString, {@link NhcAccess}></code>
+     */
+    public Map<String, NhcAccess> getAccessDevices() {
+        return accessDevices;
+    }
+
+    /**
+     * Return all video devices in the Niko Home Control Controller.
+     *
+     * @return <code>Map&ltString, {@link NhcVideo}></code>
+     */
+    public Map<String, NhcVideo> getVideoDevices() {
+        return videoDevices;
+    }
+
+    /**
+     * Return all alarm devices in the Niko Home Control Controller.
+     *
+     * @return <code>Map&lt;String, {@link NhcAlarm}></code>
+     */
+    public Map<String, NhcAlarm> getAlarmDevices() {
+        return alarmDevices;
+    }
+
+    /**
+     * Return all car chargers devices in the Niko Home Control Controller.
+     *
+     * @return <code>Map&lt;String, {@link NhcCarCharger}></code>
+     */
+    public Map<String, NhcCarCharger> getCarChargerDevices() {
+        return carChargerDevices;
     }
 
     /**
@@ -200,16 +239,175 @@ public abstract class NikoHomeControlCommunication {
     public abstract void executeThermostat(String thermostatId, int overruleTemp, int overruleTime);
 
     /**
-     * Start retrieving energy meter data from Niko Home Control.
+     * Query meter for energy, gas consumption or water production/consumption data. The query will update the total
+     * production/consumption and production/consumption from the start of the day through the meterReadingEvent
+     * callback in {@link NhcMeterEvent}.
      *
+     * @param meterId
+     * @param startDate 0 reference for the meter
      */
-    public void startEnergyMeter(String energyMeterId) {
+    public abstract void executeMeter(String meterId, String startDate);
+
+    /**
+     * Start retrieving energy meter data from Niko Home Control. The method is used to regularly retrigger the
+     * information flow. It can be left empty in concrete classes if the power data is flowing continuously.
+     *
+     * @param meterId
+     */
+    public void startMeterLive(String meterId) {
+        NhcMeter meter = getMeters().get(meterId);
+        if (meter != null) {
+            meter.startMeterLive();
+        }
     }
 
     /**
-     * Stop retrieving energy meter data from Niko Home Control.
+     * Retrigger retrieving energy meter data from Niko Home Control. This is used if the power data does not continue
+     * flowing automatically and needs to be retriggered at regular intervals.
      *
+     * @param meterId
      */
-    public void stopEnergyMeter(String energyMeterId) {
+    public abstract void retriggerMeterLive(String meterId);
+
+    /**
+     * Stop retrieving energy meter data from Niko Home Control. This method can be used to stop a scheduled retrigger
+     * of the information flow, as scheduled in {{@link #startMeterLive(String)}.
+     *
+     * @param meterId
+     */
+    public void stopMeterLive(String meterId) {
+        NhcMeter meter = getMeters().get(meterId);
+        if (meter != null) {
+            meter.stopMeterLive();
+        }
+    };
+
+    /**
+     * Start retrieving meter data from Niko Home Control at a regular interval.
+     *
+     * @param meterId
+     * @param refresh reading frequency in minutes
+     */
+    public void startMeter(String meterId, int refresh, String startDate) {
+        NhcMeter meter = getMeters().get(meterId);
+        if (meter != null) {
+            meter.startMeter(refresh, startDate);
+            return;
+        }
+        NhcCarCharger carCharger = getCarChargerDevices().get(meterId);
+        if (carCharger != null) {
+            carCharger.startMeter(refresh, startDate);
+            return;
+        }
+    }
+
+    /**
+     * Stop retrieving meter data from Niko Home Control at a regular interval.
+     */
+    public void stopMeter(String meterId) {
+        NhcMeter meter = getMeters().get(meterId);
+        if (meter != null) {
+            meter.stopMeter();
+            return;
+        }
+        NhcCarCharger carCharger = getCarChargerDevices().get(meterId);
+        if (carCharger != null) {
+            carCharger.stopMeter();
+            return;
+        }
+    }
+
+    /**
+     * Stop retrieving meter data from Niko Home Control at a regular interval for all meters.
+     */
+    public void stopAllMeters() {
+        for (String meterId : getMeters().keySet()) {
+            stopMeter(meterId);
+            stopMeterLive(meterId);
+        }
+        for (String carChargerId : getCarChargerDevices().keySet()) {
+            stopMeter(carChargerId);
+        }
+    }
+
+    /**
+     * Execute a bell command on an access control device by sending it to Niko Home Control.
+     *
+     * @param accessId
+     */
+    public void executeAccessBell(String accessId) {
+    }
+
+    /**
+     * Execute a bell command on video control device by sending it to Niko Home Control.
+     *
+     * @param accessId
+     * @param buttonIndex
+     */
+    public void executeVideoBell(String accessId, int buttonIndex) {
+    }
+
+    /**
+     * Switches state ring and come on access control device (turns on if off and off if on) by sending it to Niko Home
+     * Control.
+     *
+     * @param accessId
+     * @param ringAndComeIn status
+     */
+    public void executeAccessRingAndComeIn(String accessId, boolean ringAndComeIn) {
+    }
+
+    /**
+     * Execute an unlock command on an access control device by sending it to Niko Home Control.
+     *
+     * @param accessId
+     */
+    public void executeAccessUnlock(String accessId) {
+    }
+
+    /**
+     * Execute an arm command on an alarm control device by sending it to Niko Home Control.
+     *
+     * @param accessId
+     */
+    public void executeArm(String alarmId) {
+    }
+
+    /**
+     * Execute an disarm command on an alarm control device by sending it to Niko Home Control.
+     *
+     * @param accessId
+     */
+    public void executeDisarm(String alarmId) {
+    }
+
+    /**
+     * Sends a command to set the status of a car charger to Niko Home Control.
+     *
+     * @param carChargerId the unique identifier of the car charger
+     * @param status the desired status of the car charger (true to enable, false to disable)
+     */
+    public void executeCarChargerStatus(String carChargerId, boolean status) {
+    }
+
+    /**
+     * Executes a command to set the charging mode for a car charger to Niko Home Control.
+     *
+     * @param carChargerId the unique identifier of the car charger device
+     * @param chargingMode the desired charging mode (SOLAR, NORMAL or SMART)
+     * @param targetDistance the target distance (in kilometers) to be achieved by charging
+     * @param targetTime the target time (in ISO 8601 format or HH:mm) by which charging should be completed
+     */
+    public void executeCarChargerChargingMode(String carChargerId, String chargingMode, float targetDistance,
+            String targetTime) {
+    }
+
+    /**
+     * Executes a charging boost command for the specified car charger.
+     *
+     * @param carChargerId the unique identifier of the car charger to control
+     * @param boost {@code true} to enable charging boost, {@code false} to disable it
+     */
+    public void executeCarChargerChargingBoost(String carChargerId, boolean boost) {
     }
 }

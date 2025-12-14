@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,12 +27,13 @@ import org.openhab.core.thing.ThingUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import tuwien.auto.calimero.Connection.BlockingMode;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.link.KNXNetworkLink;
-import tuwien.auto.calimero.link.KNXNetworkLinkFT12;
-import tuwien.auto.calimero.link.medium.TPSettings;
-import tuwien.auto.calimero.serial.FT12Connection;
+import io.calimero.Connection.BlockingMode;
+import io.calimero.KNXException;
+import io.calimero.link.KNXNetworkLink;
+import io.calimero.link.KNXNetworkLinkFT12;
+import io.calimero.link.medium.TPSettings;
+import io.calimero.secure.Security;
+import io.calimero.serial.FT12Connection;
 
 /**
  * Serial specific {@link AbstractKNXClient} implementation.
@@ -53,10 +54,10 @@ public class SerialClient extends AbstractKNXClient {
 
     public SerialClient(int autoReconnectPeriod, ThingUID thingUID, int responseTimeout, int readingPause,
             int readRetriesLimit, ScheduledExecutorService knxScheduler, String serialPort, boolean useCemi,
-            SerialPortManager serialPortManager, CommandExtensionData commandExtensionData,
+            SerialPortManager serialPortManager, CommandExtensionData commandExtensionData, Security openhabSecurity,
             StatusUpdateCallback statusUpdateCallback) {
         super(autoReconnectPeriod, thingUID, responseTimeout, readingPause, readRetriesLimit, knxScheduler,
-                commandExtensionData, statusUpdateCallback);
+                commandExtensionData, openhabSecurity, statusUpdateCallback);
         this.serialPortManager = serialPortManager;
         this.serialPort = serialPort;
         this.useCemi = useCemi;
@@ -65,7 +66,7 @@ public class SerialClient extends AbstractKNXClient {
     /**
      * try automatic detection of cEMI devices via the PEI identification frame
      *
-     * @implNote This is based on an vendor specific extension and may not work for other devices.
+     * @implNote This is based on a vendor specific extension and may not work for other devices.
      */
     protected boolean detectCemi() throws InterruptedException {
         final byte[] peiIdentifyReqFrame = { (byte) 0xa7 };
