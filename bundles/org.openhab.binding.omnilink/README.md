@@ -9,7 +9,7 @@ It connects to many other devices through serial ports or wired contacts and exp
 The OmniPro/Lumina controller acts as a "bridge" for accessing other connected devices.
 
 | Omni type                  | Hardware Type                                    | Things                            |
-|:---------------------------|:-------------------------------------------------|:----------------------------------|
+| :------------------------- | :----------------------------------------------- | :-------------------------------- |
 | Controller                 | Omni (Pro II, IIe, LTe), Lumina                  | `controller` (omni, lumina)       |
 | Lights                     | Built-in, UPB, HLC                               | `unit`, `dimmable`, `upb`, `room` |
 | Thermostats                | Omnistat, Omnistat2                              | `thermostat`                      |
@@ -56,7 +56,7 @@ The devices are identified by the device number that the OmniLink bridge assigns
 The devices support some of the following channels:
 
 | Channel Type ID             | Item Type            | Description                                                                                  | Thing types supporting this channel                 |
-|-----------------------------|----------------------|----------------------------------------------------------------------------------------------|-----------------------------------------------------|
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | `activate_keypad_emergency` | Number               | Activate a burglary, fire, or auxiliary keypad emergency alarm on Omni based models.         | `area`                                              |
 | `alarm_burglary`            | Switch               | Indicates if a burglary alarm is active.                                                     | `area`                                              |
 | `alarm_fire`                | Switch               | Indicates if a fire alarm is active.                                                         | `area`                                              |
@@ -130,19 +130,19 @@ The devices support some of the following channels:
 
 The devices support some of the following trigger channels:
 
-| Channel Type ID               | Description                                                                          | Thing types supporting this channel |
-|-------------------------------|--------------------------------------------------------------------------------------|-------------------------------------|
-| `all_on_off_event`            | Event sent when an all on/off event occurs.                                          | `area`, `lumina_area`               |
-| `phone_line_event`            | Event sent when the phone line changes state.                                        | `controller`                        |
-| `ac_power_event`              | Event sent when AC trouble conditions are detected.                                  | `controller`                        |
-| `battery_event`               | Event sent when battery trouble conditions are detected.                             | `controller`                        |
-| `dcm_event`                   | Event sent when digital communicator trouble conditions are detected.                | `controller`                        |
-| `energy_cost_event`           | Event sent when the cost of energy changes.                                          | `controller`                        |
-| `camera_trigger_event`        | Event sent when a camera trigger is detected.                                        | `controller`                        |
-| `upb_link_activated_event`    | Event sent when a UPB link is activated.                                             | `controller`                        |
-| `upb_link_deactivated_event`  | Event sent when a UPB link is deactivated.                                           | `controller`                        |
-| `activated_event`             | Event sent when a button is activated.                                               | `button`                            |
-| `switch_press_event`          | Event sent when an ALC, UPB, Radio RA, or Starlite switch is pressed.                | `dimmable`, `upb`                   |
+| Channel Type ID              | Description                                                           | Thing types supporting this channel |
+| ---------------------------- | --------------------------------------------------------------------- | ----------------------------------- |
+| `all_on_off_event`           | Event sent when an all on/off event occurs.                           | `area`, `lumina_area`               |
+| `phone_line_event`           | Event sent when the phone line changes state.                         | `controller`                        |
+| `ac_power_event`             | Event sent when AC trouble conditions are detected.                   | `controller`                        |
+| `battery_event`              | Event sent when battery trouble conditions are detected.              | `controller`                        |
+| `dcm_event`                  | Event sent when digital communicator trouble conditions are detected. | `controller`                        |
+| `energy_cost_event`          | Event sent when the cost of energy changes.                           | `controller`                        |
+| `camera_trigger_event`       | Event sent when a camera trigger is detected.                         | `controller`                        |
+| `upb_link_activated_event`   | Event sent when a UPB link is activated.                              | `controller`                        |
+| `upb_link_deactivated_event` | Event sent when a UPB link is deactivated.                            | `controller`                        |
+| `activated_event`            | Event sent when a button is activated.                                | `button`                            |
+| `switch_press_event`         | Event sent when an ALC, UPB, Radio RA, or Starlite switch is pressed. | `dimmable`, `upb`                   |
 
 ## Rule Actions
 
@@ -151,18 +151,28 @@ There is a separate instance for each contoller, which can be retrieved through:
 
 :::: tabs
 
+::: tab DSL
+
+```java
+val omnilinkActions = getActions("omnilink", "omnilink:controller:home")
+```
+
+:::
+
 ::: tab JavaScript
 
-``` javascript
+```javascript
 var omnilinkActions = actions.get("omnilink", "omnilink:controller:home");
 ```
 
 :::
 
-::: tab DSL
+::: tab JRuby
 
-``` php
-val omnilinkActions = getActions("omnilink", "omnilink:controller:home")
+In JRuby, Action methods are available directly on the Thing object.
+
+```ruby
+omni_link = things["omnilink:controller:home"]
 ```
 
 :::
@@ -174,18 +184,26 @@ Once this action instance is retrieved, you can invoke the `synchronizeControlle
 
 :::: tabs
 
+::: tab DSL
+
+```java
+omnilinkActions.synchronizeControllerTime("America/Denver")
+```
+
+:::
+
 ::: tab JavaScript
 
-``` javascript
+```javascript
 omnilinkActions.synchronizeControllerTime("America/Denver");
 ```
 
 :::
 
-::: tab DSL
+::: tab JRuby
 
-``` php
-omnilinkActions.synchronizeControllerTime("America/Denver")
+```ruby
+omni_link.synchronize_controller_time("America/Denver")
 ```
 
 :::
@@ -236,13 +254,13 @@ Switch    AlarmFreeze        "Freeze Alarm [%s]"                 (Alarms)    {ch
 Switch    AlarmWater         "Water Alarm [%s]"                  (Alarms)    {channel="omnilink:area:home:MainArea:alarm_water"}
 Switch    AlarmDuress        "Duress Alarm [%s]"                 (Alarms)    {channel="omnilink:area:home:MainArea:alarm_duress"}
 Switch    AlarmTemperature   "Temperature Alarm [%s]"            (Alarms)    {channel="omnilink:area:home:MainArea:alarm_temperature"}
-Number    AlarmModeDisarm                                                    {channel="omnilink:area:home:MainArea:disarm"}
-Number    AlarmModeDay                                                       {channel="omnilink:area:home:MainArea:day"}
-Number    AlarmModeNight                                                     {channel="omnilink:area:home:MainArea:night"}
-Number    AlarmModeAway                                                      {channel="omnilink:area:home:MainArea:away"}
-Number    AlarmModeVacation                                                  {channel="omnilink:area:home:MainArea:vacation"}
-Number    AlarmModeDayInstant                                                {channel="omnilink:area:home:MainArea:day_instant"}
-Number    AlarmModeNightDelayed                                              {channel="omnilink:area:home:MainArea:night_delayed"}
+String    AlarmModeDisarm                                                    {channel="omnilink:area:home:MainArea:disarm"}
+String    AlarmModeDay                                                       {channel="omnilink:area:home:MainArea:day"}
+String    AlarmModeNight                                                     {channel="omnilink:area:home:MainArea:night"}
+String    AlarmModeAway                                                      {channel="omnilink:area:home:MainArea:away"}
+String    AlarmModeVacation                                                  {channel="omnilink:area:home:MainArea:vacation"}
+String    AlarmModeDayInstant                                                {channel="omnilink:area:home:MainArea:day_instant"}
+String    AlarmModeNightDelayed                                              {channel="omnilink:area:home:MainArea:night_delayed"}
 
 /*
  * Lights

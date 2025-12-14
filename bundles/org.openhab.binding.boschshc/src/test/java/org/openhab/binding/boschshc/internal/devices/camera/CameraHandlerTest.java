@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -14,21 +14,23 @@ package org.openhab.binding.boschshc.internal.devices.camera;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openhab.binding.boschshc.internal.devices.AbstractBoschSHCDeviceHandlerTest;
 import org.openhab.binding.boschshc.internal.devices.BoschSHCBindingConstants;
 import org.openhab.binding.boschshc.internal.exceptions.BoschSHCException;
-import org.openhab.binding.boschshc.internal.services.cameranotification.CameraNotificationState;
 import org.openhab.binding.boschshc.internal.services.cameranotification.dto.CameraNotificationServiceState;
-import org.openhab.binding.boschshc.internal.services.privacymode.PrivacyModeState;
+import org.openhab.binding.boschshc.internal.services.dto.EnabledDisabledState;
 import org.openhab.binding.boschshc.internal.services.privacymode.dto.PrivacyModeServiceState;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.thing.ChannelUID;
@@ -44,6 +46,7 @@ import com.google.gson.JsonParser;
  *
  */
 @NonNullByDefault
+@ExtendWith(MockitoExtension.class)
 class CameraHandlerTest extends AbstractBoschSHCDeviceHandlerTest<CameraHandler> {
 
     private @Captor @NonNullByDefault({}) ArgumentCaptor<PrivacyModeServiceState> privacyModeServiceStateCaptor;
@@ -73,14 +76,14 @@ class CameraHandlerTest extends AbstractBoschSHCDeviceHandlerTest<CameraHandler>
         verify(getBridgeHandler()).putState(eq(getDeviceID()), eq("PrivacyMode"),
                 privacyModeServiceStateCaptor.capture());
         PrivacyModeServiceState state = privacyModeServiceStateCaptor.getValue();
-        assertSame(PrivacyModeState.ENABLED, state.value);
+        assertSame(EnabledDisabledState.ENABLED, state.value);
 
         getFixture().handleCommand(new ChannelUID(getThing().getUID(), BoschSHCBindingConstants.CHANNEL_PRIVACY_MODE),
                 OnOffType.OFF);
         verify(getBridgeHandler(), times(2)).putState(eq(getDeviceID()), eq("PrivacyMode"),
                 privacyModeServiceStateCaptor.capture());
         state = privacyModeServiceStateCaptor.getValue();
-        assertSame(PrivacyModeState.DISABLED, state.value);
+        assertSame(EnabledDisabledState.DISABLED, state.value);
     }
 
     @Test
@@ -92,7 +95,7 @@ class CameraHandlerTest extends AbstractBoschSHCDeviceHandlerTest<CameraHandler>
         verify(getBridgeHandler()).putState(eq(getDeviceID()), eq("CameraNotification"),
                 cameraNotificationServiceStateCaptor.capture());
         CameraNotificationServiceState state = cameraNotificationServiceStateCaptor.getValue();
-        assertSame(CameraNotificationState.ENABLED, state.value);
+        assertSame(EnabledDisabledState.ENABLED, state.value);
 
         getFixture().handleCommand(
                 new ChannelUID(getThing().getUID(), BoschSHCBindingConstants.CHANNEL_CAMERA_NOTIFICATION),
@@ -100,7 +103,7 @@ class CameraHandlerTest extends AbstractBoschSHCDeviceHandlerTest<CameraHandler>
         verify(getBridgeHandler(), times(2)).putState(eq(getDeviceID()), eq("CameraNotification"),
                 cameraNotificationServiceStateCaptor.capture());
         state = cameraNotificationServiceStateCaptor.getValue();
-        assertSame(CameraNotificationState.DISABLED, state.value);
+        assertSame(EnabledDisabledState.DISABLED, state.value);
     }
 
     @Test

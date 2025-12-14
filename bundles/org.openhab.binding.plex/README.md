@@ -4,15 +4,15 @@ This binding can read information from multiple PLEX players connected to a PLEX
 
 It can be used for multiple scenarios:
 
-* Drive light changes based on player status. For instances turn off the lights when movie starts playing and turn them back on when movie is stopped/paused
-* Create a page that displays currently played media of one or more player connected to the server.
-* Send social media messages when player plays new media
-* Inform what the end time of the currently played media is
+- Drive light changes based on player status. For instances turn off the lights when movie starts playing and turn them back on when movie is stopped/paused
+- Create a page that displays currently played media of one or more player connected to the server.
+- Send social media messages when player plays new media
+- Inform what the end time of the currently played media is
 
 The binding can also control `PLAY/PAUSE/NEXT/PREVIOUS` the players which can be used for:
 
-* Start playing some music when someone enters a room
-* Pause the movie when motion is detected
+- Start playing some music when someone enters a room
+- Pause the movie when motion is detected
 
 ## Supported Things
 
@@ -24,17 +24,17 @@ This binding supports 2 things.
 ## Discovery
 
 For the auto discovery to work correctly you first need to configure and add the `PLEX Server` Thing.
-Next step is to *PLAY* something on the desired player. Only when media is played on the player it will show up in the auto discovery!
+Next step is to _PLAY_ something on the desired player. Only when media is played on the player it will show up in the auto discovery!
 
 ## Thing Configuration
 
 The PLEX Server needs to be configured first. The hostname of the PLEX server is mandatory and the either the PLEX token (recommended) or the username/password of the PLEX server (not recommended).
 
-Then find the PLEX token please follow the instructions from the PLEX support forum: 
+Then find the PLEX token please follow the instructions from the PLEX support forum:
 
-1. Sign in to your Plex account in Plex Web App
-2. Browse to a library item and view the XML for it
-3. Look in the URL and find the token as the X-Plex-Token value
+1. [Sign in to your Plex account](https://support.plex.tv/articles/200933616-plex-account/) in Plex Web App
+1. Browse to a library item and [view the XML](https://support.plex.tv/articles/201998867-investigate-media-information-and-formats/) for it
+1. Look in the URL and find the token as the `X-Plex-Token` value
 
 ### `PLEX Server` Thing Configuration
 
@@ -53,12 +53,12 @@ You can add multiple PLEX players. You can choose to find the player by autodisc
 
 #### Autodiscovery
 
-Turn on the player you want to add and *play* some media on it. Navigate to `/settings/things/add/plex` and start the auto discover.
-The player will be found and you can add it. 
+Turn on the player you want to add and _play_ some media on it. Navigate to `/settings/things/add/plex` and start the auto discover.
+The player will be found and you can add it.
 
 #### Manual adding a player Thing
 
-When you want to add them manually go to the following url [https://plex.tv/devices.xml] and login when needed.
+When you want to add them manually go to the following url [https://plex.tv/devices.xml?X-Plex-Token=YOURTOKENVALUEHERE] .
 
 It will display the following XML file.
 
@@ -118,13 +118,14 @@ The PLEX Player supports the following channels:
 | ratingKey            | String   | RO         | The unique key in the Plex library identifying the media that is playing                                         |
 | parentRatingKey      | String   | RO         | The unique key in the Plex library identifying the parent (TV show season or album) of the media that is playing |
 | grandparentRatingKey | String   | RO         | The unique key in the Plex library identifying the grandparent (TV show) of the media that is playing            |
+| user                 | String   | RO         | The user title                                                          |
 
 ## Full Example
 
 `.things` file:
 
 ```java
-Bridge plex:server:plexrServer "Bridge Plex : Plex" [host="IP.Address.Or.Hostname", token="SadhjsajjA3AG", refreshRate=5]
+Bridge plex:server:plexServer "Bridge Plex : Plex" [host="IP.Address.Or.Hostname", token="SadhjsajjA3AG", refreshRate=5]
 {
     Thing plex:player:MyViewerName01 "My Viewer Name 01" [playerID="ClientIdentifierFromDevices.XML1"]
     Thing plex:player:MyViewerName02 "My Viewer Name 02" [playerID="ClientIdentifierFromDevices.XML2"]
@@ -134,18 +135,24 @@ Bridge plex:server:plexrServer "Bridge Plex : Plex" [host="IP.Address.Or.Hostnam
 `.items` file
 
 ```java
-String    BridgePlexCurrent            "Current players"           {channel="plex:server:plexrServer:currentPlayers"}
-String    BridgePlexCurrentActive      "Current players active"    {channel="plex:server:plexrServer:currentPlayersActive"}
+String    BridgePlexCurrent            "Current players"           {channel="plex:server:plexServer:currentPlayers"}
+String    BridgePlexCurrentActive      "Current players active"    {channel="plex:server:plexServer:currentPlayersActive"}
+
 Switch    PlexTVPower01                "Power"                     {channel="plex:player:MyViewerName01:power"}
 String    PlexTVStatus01               "Status [%s]"               {channel="plex:player:MyViewerName01:state"}
+Player    PlexTVControl01              "Player"                    {channel="plex:player:MyViewerName01:player"}
+String    PlexTVUser01                 "User [%s]"                 {channel="plex:player:MyViewerName01:user"}
 String    PlexTVTitle01                "Title [%s]"                {channel="plex:player:MyViewerName01:title"}
 String    PlexTVType01                 "Type [%s]"                 {channel="plex:player:MyViewerName01:type"}
 String    PlexTVEndTime01              "End time"                  {channel="plex:player:MyViewerName01:endtime"}
 Dimmer    PlexTVProgress01             "Progress [%.1f%%]"         {channel="plex:player:MyViewerName01:progress"}
 String    PlexTVCover1                 "Cover"                     {channel="plex:player:MyViewerName01:thumb"}
 String    ShellArt01                   "Background art"            {channel="plex:player:MyViewerName01:art"}
+
 Switch    PlexTVPower02                "Power"                     {channel="plex:player:MyViewerName02:power"}
 String    PlexTVStatus02               "Status [%s]"               {channel="plex:player:MyViewerName02:state"}
+Player    PlexTVControl02              "Player"                    {channel="plex:player:MyViewerName02:player"}
+String    PlexTVUser02                 "User [%s]"                 {channel="plex:player:MyViewerName02:user"}
 String    PlexTVTitle02                "Title [%s]"                {channel="plex:player:MyViewerName02:title"}
 String    PlexTVType02                 "Type [%s]"                 {channel="plex:player:MyViewerName02:type"}
 String    PlexTVEndTime02              "End time"                  {channel="plex:player:MyViewerName02:endtime"}

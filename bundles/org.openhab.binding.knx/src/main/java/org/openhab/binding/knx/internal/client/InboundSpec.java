@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -16,7 +16,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
-import tuwien.auto.calimero.GroupAddress;
+import io.calimero.GroupAddress;
 
 /**
  * Describes the relevant parameters for reading from/listening to the KNX bus.
@@ -37,7 +37,7 @@ public interface InboundSpec {
     /**
      * Get the affected group addresses.
      *
-     * @return a list of group addresses.
+     * @return a Set of group addresses.
      */
     Set<GroupAddress> getGroupAddresses();
 }

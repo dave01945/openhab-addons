@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -32,17 +32,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import aQute.bnd.annotation.spi.ServiceProvider;
-import tuwien.auto.calimero.KNXException;
-import tuwien.auto.calimero.serial.spi.SerialCom;
+import io.calimero.KNXException;
+import io.calimero.serial.spi.SerialCom;
 
 /**
  * The {@link SerialTransportAdapter} provides org.openhab.core.io.transport.serial
  * services to the Calimero library.
  * 
  * {@literal @}ServiceProvider annotation (biz.aQute.bnd.annotation) automatically creates the file
- * /META-INF/services/tuwien.auto.calimero.serial.spi.SerialCom
+ * /META-INF/services/io.calimero.serial.spi.SerialCom
  * to register SerialTransportAdapter to the service loader.
- * Additional attributes for SerialTansportAdapter can be specified as well, e.g.
+ * Additional attributes for SerialTransportAdapter can be specified as well, e.g.
  * attribute = { "position=1" }
  * and will be part of MANIFEST.MF
  * 
@@ -69,12 +69,11 @@ public class SerialTransportAdapter implements SerialCom {
     public SerialTransportAdapter() {
     }
 
-    @Override
     public void open(@Nullable String portId) throws IOException, KNXException {
         if (portId == null) {
             throw new IOException("Port not available");
         }
-        logger = LoggerFactory.getLogger("SerialTransportAdapter:" + portId);
+        logger = LoggerFactory.getLogger(SerialTransportAdapter.class.getName() + ":" + portId);
 
         final @Nullable SerialPortManager tmpSerialPortManager = serialPortManager;
         if (tmpSerialPortManager == null) {
@@ -83,6 +82,10 @@ public class SerialTransportAdapter implements SerialCom {
         try {
             SerialPortIdentifier portIdentifier = tmpSerialPortManager.getIdentifier(portId);
             if (portIdentifier != null) {
+                if (portIdentifier.isCurrentlyOwned()) {
+                    logger.warn("Configured port {} is currently in use by another application: {}", portId,
+                            portIdentifier.getCurrentOwner());
+                }
                 logger.trace("Trying to open port {}", portId);
                 SerialPort serialPort = portIdentifier.open(this.getClass().getName(), OPEN_TIMEOUT_MS);
                 // apply default settings for com port, may be overwritten by caller
@@ -150,7 +153,6 @@ public class SerialTransportAdapter implements SerialCom {
 
     // disable NonNullByDefault for this function, legacy interface List<String>
     @NonNullByDefault({})
-    @Override
     public List<String> portIdentifiers() {
         final @Nullable SerialPortManager tmpSerialPortManager = serialPortManager;
         if (tmpSerialPortManager == null) {
@@ -170,7 +172,6 @@ public class SerialTransportAdapter implements SerialCom {
         return tmpSerialPort.getBaudRate();
     }
 
-    @Override
     public void setSerialPortParams(final int baudrate, final int databits, @Nullable StopBits stopbits,
             @Nullable Parity parity) throws IOException {
         final @Nullable SerialPort tmpSerialPort = serialPort;
@@ -187,7 +188,6 @@ public class SerialTransportAdapter implements SerialCom {
         }
     }
 
-    @Override
     public void setFlowControlMode(@Nullable FlowControl mode) throws IOException {
         final @Nullable SerialPort tmpSerialPort = serialPort;
         if (tmpSerialPort == null) {
