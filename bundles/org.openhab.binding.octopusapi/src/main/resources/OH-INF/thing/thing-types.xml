@@ -12,8 +12,13 @@
 		<channels>
 			<channel id="consumption" typeId="consumption"/>
 			<channel id="export" typeId="export"/>
-			<channel id="agileRates" typeId="agileRates"/>
-			<channel id="agileExRates" typeId="agileExRates"/>
+			<channel id="currentRates" typeId="currentRates"/>
+			<channel id="currentExRates" typeId="currentExRates"/>
+			<channel id="gasConsumption" typeId="gasConsumption"/>
+			<channel id="gasRates" typeId="gasRates"/>
+			<channel id="gasExRates" typeId="gasExRates"/>
+			<channel id="liveDemand" typeId="liveDemand"/>
+			<channel id="liveMeterReading" typeId="liveMeterReading"/>
 		</channels>
 
 		<config-description-ref uri="thing-type:octopusapi:settings"/>
@@ -31,16 +36,46 @@
 		<description>30 min energy export</description>
 		<state pattern="%.2f %unit%"></state>
 	</channel-type>
-	<channel-type id="agileRates">
-		<item-type>Number:EnergyPrice</item-type>
-		<label>Agile Rates</label>
-		<description>Agile rates for the next day</description>
+	<channel-type id="currentRates">
+		<item-type>Number</item-type>
+		<label>Current Tariff Rates</label>
+		<description>Account tariff rates from GraphQL API (GBP per kWh)</description>
+		<state pattern="%.2f"></state>
+	</channel-type>
+	<channel-type id="currentExRates">
+		<item-type>Number</item-type>
+		<label>Current Tariff Rates Excluding VAT</label>
+		<description>Account tariff rates excluding VAT from GraphQL API (GBP per kWh)</description>
+		<state pattern="%.2f"></state>
+	</channel-type>
+	<channel-type id="gasConsumption">
+		<item-type>Number:Energy</item-type>
+		<label>Gas Consumption</label>
+		<description>30 min gas consumption</description>
 		<state pattern="%.2f %unit%"></state>
 	</channel-type>
-	<channel-type id="agileExRates">
-		<item-type>Number:EnergyPrice</item-type>
-		<label>Agile Rates Excluding VAT</label>
-		<description>Agile rates for the next day excluding VAT</description>
-		<state pattern="%.2f %unit%"></state>
+	<channel-type id="gasRates">
+		<item-type>Number</item-type>
+		<label>Gas Tariff Rates</label>
+		<description>Gas tariff rates from GraphQL API (GBP per kWh)</description>
+		<state pattern="%.2f"></state>
+	</channel-type>
+	<channel-type id="gasExRates">
+		<item-type>Number</item-type>
+		<label>Gas Tariff Rates Excluding VAT</label>
+		<description>Gas tariff rates excluding VAT from GraphQL API (GBP per kWh)</description>
+		<state pattern="%.2f"></state>
+	</channel-type>
+	<channel-type id="liveDemand">
+		<item-type>Number:Power</item-type>
+		<label>Live Demand</label>
+		<description>Real-time power demand (requires Octopus Home Mini)</description>
+		<state pattern="%.0f %unit%"></state>
+	</channel-type>
+	<channel-type id="liveMeterReading">
+		<item-type>Number:Energy</item-type>
+		<label>Live Meter Reading</label>
+		<description>Real-time cumulative meter reading (requires Octopus Home Mini)</description>
+		<state pattern="%.3f %unit%"></state>
 	</channel-type>
 </thing:thing-descriptions>

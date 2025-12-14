@@ -1,94 +1,196 @@
-# OctopusApi Binding
+# Octopus API Binding
 
-_Give some details about what this binding is meant for - a protocol, system, specific device._
+This binding integrates with the [Octopus Energy](https://octopus.energy) GraphQL API for UK customers.
+It provides access to electricity and gas consumption data, export readings (for solar/battery systems), and tariff rates including Agile pricing.
+The binding also supports real-time smart meter telemetry for users with an Octopus Home Mini device.
 
-_If possible, provide some resources like pictures (only PNG is supported currently), a video, etc. to give an impression of what can be done with this binding._
-_You can place such resources into a `doc` folder next to this README.md._
-
-_Put each sentence in a separate line to improve readability of diffs._
+All consumption, export, and tariff data is provided as TimeSeries, allowing OpenHAB to track historical data and display it in charts.
 
 ## Supported Things
 
-_Please describe the different supported things / devices including their ThingTypeUID within this section._
-_Which different types are supported, which models were tested etc.?_
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
+This binding provides a single thing type:
 
-- `bridge`: Short description of the Bridge, if any
-- `sample`: Short description of the Thing with the ThingTypeUID `sample`
+- `octopus` - Octopus Energy account thing (ThingTypeUID: `octopusapi:octopus`)
 
 ## Discovery
 
-_Describe the available auto-discovery features here._
-_Mention for what it works and what needs to be kept in mind when using it._
+This binding does not support automatic discovery.
+You must manually configure the thing with your Octopus Energy account credentials.
 
-## Binding Configuration
+## Prerequisites
 
-_If your binding requires or supports general configuration settings, please create a folder ```cfg``` and place the configuration file ```<bindingId>.cfg``` inside it._
-_In this section, you should link to this file and provide some information about the options._
-_The file could e.g. look like:_
+Before using this binding, you need:
 
-```
-# Configuration for the OctopusApi Binding
-#
-# Default secret key for the pairing of the OctopusApi Thing.
-# It has to be between 10-40 (alphanumeric) characters.
-# This may be changed by the user for security reasons.
-secret=openHABSecret
-```
-
-_Note that it is planned to generate some part of this based on the information that is available within ```src/main/resources/OH-INF/binding``` of your binding._
-
-_If your binding does not offer any generic configurations, you can remove this section completely._
+1. An active Octopus Energy account (UK)
+2. Your API key (obtain from your [Octopus Energy dashboard](https://octopus.energy/dashboard/developer/))
+3. Your account number (found in your Octopus Energy account dashboard)
+4. (Optional) Your smart meter device ID if you have an Octopus Home Mini for real-time data
 
 ## Thing Configuration
 
-_Describe what is needed to manually configure a thing, either through the UI or via a thing-file._
-_This should be mainly about its mandatory and optional configuration parameters._
+The binding requires the following configuration parameters:
 
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
+| Name                    | Type    | Description                                                                                  | Default | Required |
+|-------------------------|---------|----------------------------------------------------------------------------------------------|---------|----------|
+| apiKey                  | text    | Your Octopus Energy API key                                                                  | N/A     | yes      |
+| accountNumber           | text    | Your Octopus Energy account number                                                           | N/A     | yes      |
+| refreshInterval         | integer | Interval between data refreshes in hours (1-48)                                              | 12      | yes      |
+| liveRefreshInterval     | integer | Interval between live telemetry updates in seconds (10-300). Minimum 30s recommended by Octopus | 30      | yes      |
+| deviceId                | text    | Smart meter device GUID for Octopus Home Mini (format: AA-BB-CC-DD-EE-FF-GG-HH)            | N/A     | no       |
 
-### `sample` Thing Configuration
-
-| Name            | Type    | Description                           | Default | Required | Advanced |
-|-----------------|---------|---------------------------------------|---------|----------|----------|
-| hostname        | text    | Hostname or IP address of the device  | N/A     | yes      | no       |
-| password        | text    | Password to access the device         | N/A     | yes      | no       |
-| refreshInterval | integer | Interval the device is polled in sec. | 600     | no       | yes      |
+**Note**: The `deviceId` parameter is only needed if you have an Octopus Home Mini and want to receive real-time power demand and meter readings.
+Leave this blank if you don't have a Home Mini device.
 
 ## Channels
 
-_Here you should provide information about available channel types, what their meaning is and how they can be used._
+The binding provides the following channels:
 
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
+| Channel ID        | Type            | Description                                                                                    |
+|-------------------|-----------------|------------------------------------------------------------------------------------------------|
+| consumption       | Number:Energy   | Half-hourly electricity consumption readings (kWh)                                             |
+| export            | Number:Energy   | Half-hourly electricity export readings for solar/battery systems (kWh)                        |
+| currentRates      | Number          | Current electricity tariff rates including VAT (GBP per kWh) - stored as dimensionless values |
+| currentExRates    | Number          | Current electricity tariff rates excluding VAT (GBP per kWh) - stored as dimensionless values |
+| gasConsumption    | Number:Energy   | Half-hourly gas consumption readings (kWh)                                                     |
+| gasRates          | Number          | Current gas tariff rates including VAT (GBP per kWh) - stored as dimensionless values         |
+| gasExRates        | Number          | Current gas tariff rates excluding VAT (GBP per kWh) - stored as dimensionless values         |
+| liveDemand        | Number:Power    | Real-time power demand (W) - requires Octopus Home Mini                                        |
+| liveMeterReading  | Number:Energy   | Real-time cumulative meter reading (kWh) - requires Octopus Home Mini                          |
 
-| Channel | Type   | Read/Write | Description                 |
-|---------|--------|------------|-----------------------------|
-| control | Switch | RW         | This is the control channel |
+**Important Notes:**
+
+- All consumption and rate data is provided as TimeSeries for historical tracking
+- Energy prices are stored as plain numbers (dimensionless) because OpenHAB doesn't support GBP/kWh units natively
+- The `consumption` and `export` channels provide data in 30-minute intervals
+- Live channels (`liveDemand` and `liveMeterReading`) only work with an Octopus Home Mini device
+- The binding automatically handles authentication token management and renewal
 
 ## Full Example
-
-_Provide a full usage example based on textual configuration files._
-_*.things, *.items examples are mandatory as textual configuration is well used by many users._
-_*.sitemap examples are optional._
 
 ### Thing Configuration
 
 ```java
-Example thing configuration goes here.
+Thing octopusapi:octopus:myaccount "Octopus Energy" [
+    apiKey="sk_live_xxxxxxxxxxxxxxxxxxxx",
+    accountNumber="A-12345678",
+    refreshInterval=12,
+    liveRefreshInterval=30,
+    deviceId="AA-BB-CC-DD-EE-FF-GG-HH"
+]
 ```
+
+For users without an Octopus Home Mini (no real-time data):
+
+```java
+Thing octopusapi:octopus:myaccount "Octopus Energy" [
+    apiKey="sk_live_xxxxxxxxxxxxxxxxxxxx",
+    accountNumber="A-12345678",
+    refreshInterval=12
+]
+```
+
 ### Item Configuration
 
 ```java
-Example item configuration goes here.
+// Electricity consumption and export
+Number:Energy ElectricityConsumption "Consumption [%.2f kWh]" { channel="octopusapi:octopus:myaccount:consumption" }
+Number:Energy ElectricityExport "Export [%.2f kWh]" { channel="octopusapi:octopus:myaccount:export" }
+
+// Tariff rates (dimensionless - values in GBP per kWh)
+Number ElectricityRate "Current Rate [%.4f £/kWh]" { channel="octopusapi:octopus:myaccount:currentRates" }
+Number ElectricityRateExVAT "Rate Ex-VAT [%.4f £/kWh]" { channel="octopusapi:octopus:myaccount:currentExRates" }
+
+// Gas consumption and rates
+Number:Energy GasConsumption "Gas Consumption [%.2f kWh]" { channel="octopusapi:octopus:myaccount:gasConsumption" }
+Number GasRate "Gas Rate [%.4f £/kWh]" { channel="octopusapi:octopus:myaccount:gasRates" }
+Number GasRateExVAT "Gas Rate Ex-VAT [%.4f £/kWh]" { channel="octopusapi:octopus:myaccount:gasExRates" }
+
+// Real-time data (requires Octopus Home Mini)
+Number:Power LiveDemand "Current Demand [%.0f W]" { channel="octopusapi:octopus:myaccount:liveDemand" }
+Number:Energy LiveMeterReading "Meter Reading [%.3f kWh]" { channel="octopusapi:octopus:myaccount:liveMeterReading" }
 ```
 
 ### Sitemap Configuration
 
 ```perl
-Optional Sitemap configuration goes here.
-Remove this section, if not needed.
+sitemap octopus label="Octopus Energy" {
+    Frame label="Electricity" {
+        Text item=ElectricityConsumption
+        Text item=ElectricityExport
+        Text item=ElectricityRate
+        Text item=ElectricityRateExVAT
+        Chart item=ElectricityConsumption period=D refresh=3600
+        Chart item=ElectricityRate period=D refresh=3600
+    }
+    
+    Frame label="Gas" {
+        Text item=GasConsumption
+        Text item=GasRate
+        Chart item=GasConsumption period=D refresh=3600
+    }
+    
+    Frame label="Live (Home Mini)" {
+        Text item=LiveDemand
+        Text item=LiveMeterReading
+        Chart item=LiveDemand period=h refresh=60
+    }
+}
 ```
 
-## Any custom content here!
+## Agile Tariff Support
 
-_Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
+If you're on an Octopus Agile tariff, the `currentRates` channel will provide half-hourly pricing updates.
+This is ideal for automation rules that take advantage of cheaper electricity during low-demand periods.
+
+Example rule to turn on a device during cheap rate periods:
+
+```java
+rule "Charge battery during cheap rates"
+when
+    Item ElectricityRate changed
+then
+    if (ElectricityRate.state < 0.10) {  // Less than 10p per kWh
+        // Turn on your device
+        logInfo("octopus", "Cheap rate detected: " + ElectricityRate.state + " £/kWh")
+    }
+end
+```
+
+## Rate Limiting
+
+The Octopus Energy API has rate limits.
+This binding is designed to respect these limits by:
+
+- Caching authentication tokens (60-minute lifetime, refreshed at 55 minutes)
+- Using configurable refresh intervals (minimum 1 hour for historical data)
+- Recommending minimum 30 seconds for live telemetry updates
+
+If you encounter rate limiting errors (HTTP 429), consider increasing your refresh intervals.
+
+## Troubleshooting
+
+### Authentication Issues
+
+If the binding shows as OFFLINE with authentication errors:
+
+1. Verify your API key is correct (obtain a new one from your Octopus dashboard if needed)
+2. Check your account number matches exactly (including the "A-" prefix)
+3. Ensure your API key has not been revoked
+
+### No Live Data
+
+If live channels (`liveDemand` and `liveMeterReading`) show no data:
+
+1. Verify you have an Octopus Home Mini device installed
+2. Check the `deviceId` format is correct (AA-BB-CC-DD-EE-FF-GG-HH)
+3. Ensure your Home Mini is online and reporting to Octopus
+
+### Check Logs
+
+Enable debug logging for detailed API communication:
+
+```
+log:set DEBUG org.openhab.binding.octopusapi
+```
+
+Then check the logs for GraphQL requests/responses and error messages.

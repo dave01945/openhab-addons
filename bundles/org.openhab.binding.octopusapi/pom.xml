@@ -11,14 +11,34 @@
   </parent>
 
   <artifactId>org.openhab.binding.octopusapi</artifactId>
+  <version>5.0.0</version>
 
   <name>openHAB Add-ons :: Bundles :: Octopus API Binding</name>
   <dependencies>
     <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20240303</version>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.11.0</version>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>biz.aQute.bnd</groupId>
+        <artifactId>bnd-maven-plugin</artifactId>
+        <configuration>
+          <bnd><![CDATA[
+            -exportcontents: !*
+            -includeresource: @gson-*.jar!/com/google/gson/**
+            Import-Package: \
+              !com.google.gson.*, \
+              org.openhab.core.*;version="[5.0.0,6.0.0)", \
+              *
+          ]]></bnd>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

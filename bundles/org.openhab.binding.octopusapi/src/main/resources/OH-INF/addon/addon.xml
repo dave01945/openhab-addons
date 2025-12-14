@@ -6,5 +6,6 @@
 	<type>binding</type>
 	<name>Octopus API Binding</name>
 	<description>This is the binding for Octopus API.</description>
+	<service-id>octopusapi</service-id>
 
 </addon:addon>
