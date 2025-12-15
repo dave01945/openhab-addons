@@ -16,16 +16,15 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.measure.quantity.Energy;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
-import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
@@ -34,7 +33,6 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
-import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.TimeSeries;
@@ -51,29 +49,27 @@ import com.google.gson.JsonParser;
  * The {@link OctopusApiHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
- * @author <David Jones> - Initial contribution
+ * @author David Jones - Initial contribution
  */
 
 @NonNullByDefault
 public class OctopusApiHandler extends BaseThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(OctopusApiHandler.class);
+    private final Logger logger = Objects.requireNonNull(LoggerFactory.getLogger(OctopusApiHandler.class));
 
     private String apiKey = "";
 
     private String accountNumber = "";
 
-    private String mpanImport = "";
+    private boolean hasExportMeter = false;
 
-    private String mpanExport = "";
+    private String electricityDeviceId = "";
 
-    private String meterSerial = "";
+    private String gasDeviceId = "";
 
-    private String mprn = "";
+    private @NonNullByDefault({}) JsonObject electricityTariffData;
 
-    private String gasMeterSerial = "";
-
-    private String deviceId = "";
+    private @NonNullByDefault({}) JsonObject gasTariffData;
 
     private @NonNullByDefault({}) OctopusApiConfiguration config;
 
@@ -91,11 +87,6 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     @Override
-    public Collection<Class<? extends ThingHandlerService>> getServices() {
-        return List.of(OctopusApiActions.class);
-    }
-
-    @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (command instanceof RefreshType) {
             pollTask();
@@ -110,11 +101,10 @@ public class OctopusApiHandler extends BaseThingHandler {
 
         this.apiKey = config.apiKey;
         this.accountNumber = config.accountNumber;
-        this.deviceId = config.deviceId;
 
         connection = new OctopusApiConnection(this, httpClient);
 
-        // Query account details to get MPANs and meter serial from API
+        // Query comprehensive account details to get MPANs, meter serials, tariffs, balance, and device ID
         try {
             queryAccountDetails();
         } catch (Exception e) {
@@ -125,8 +115,9 @@ public class OctopusApiHandler extends BaseThingHandler {
 
         scheduledFuture = scheduler.scheduleWithFixedDelay(this::pollTask, 0, config.refreshInterval, TimeUnit.HOURS);
 
-        // Start live polling if deviceId is configured (every liveRefreshInterval seconds)
-        if (!deviceId.isEmpty()) {
+        // Start live polling if electricityDeviceId was retrieved (every liveRefreshInterval seconds)
+        if (!electricityDeviceId.isEmpty()) {
+            logger.debug("Starting live data polling with device ID: {}", electricityDeviceId);
             livePollFuture = scheduler.scheduleWithFixedDelay(this::pollLiveData, 0, config.liveRefreshInterval,
                     TimeUnit.SECONDS);
         }
@@ -134,188 +125,195 @@ public class OctopusApiHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        scheduledFuture.cancel(true);
-        if (livePollFuture != null) {
-            livePollFuture.cancel(true);
+        ScheduledFuture<?> localScheduledFuture = scheduledFuture;
+        if (localScheduledFuture != null) {
+            localScheduledFuture.cancel(true);
+        }
+        ScheduledFuture<?> localLivePollFuture = livePollFuture;
+        if (localLivePollFuture != null) {
+            localLivePollFuture.cancel(true);
         }
     }
 
     private TimeSeries createConsumptionTimeSeries(String consumption) {
-
-        JsonObject graphqlResponse = JsonParser.parseString(consumption).getAsJsonObject();
         TimeSeries consumptionSeries = new TimeSeries(Policy.ADD);
 
-        // Navigate through GraphQL response structure
-        JsonObject data = graphqlResponse.getAsJsonObject("data");
-        if (data == null || !data.has("account")) {
-            return consumptionSeries;
-        }
+        try {
+            JsonObject graphqlResponse = JsonParser.parseString(consumption).getAsJsonObject();
 
-        JsonObject account = data.getAsJsonObject("account");
-        JsonArray properties = account.getAsJsonArray("properties");
-
-        if (properties == null || properties.size() == 0) {
-            return consumptionSeries;
-        }
-
-        // Iterate through properties to find electricity meter points
-        for (JsonElement propElement : properties) {
-            JsonObject property = propElement.getAsJsonObject();
-            JsonArray meterPoints = property.getAsJsonArray("electricityMeterPoints");
-
-            if (meterPoints == null) {
-                continue;
+            // Navigate through GraphQL measurements response structure
+            JsonObject data = graphqlResponse.getAsJsonObject("data");
+            if (data == null || !data.has("properties")) {
+                return consumptionSeries;
             }
 
-            for (JsonElement mpElement : meterPoints) {
-                JsonObject meterPoint = mpElement.getAsJsonObject();
-                JsonArray meters = meterPoint.getAsJsonArray("meters");
+            JsonElement propertiesElement = data.get("properties");
+            if (propertiesElement == null || !propertiesElement.isJsonArray()) {
+                logger.debug("Properties element is not a JsonArray");
+                return consumptionSeries;
+            }
 
-                if (meters == null) {
-                    continue;
-                }
+            JsonArray propertiesArray = propertiesElement.getAsJsonArray();
+            if (propertiesArray.isEmpty()) {
+                return consumptionSeries;
+            }
 
-                for (JsonElement meterElement : meters) {
-                    JsonObject meter = meterElement.getAsJsonObject();
-                    String serial = meter.get("serialNumber").getAsString();
+            JsonObject properties = propertiesArray.get(0).getAsJsonObject();
+            if (!properties.has("measurements")) {
+                return consumptionSeries;
+            }
 
-                    // Match the meter serial number
-                    if (!serial.equals(meterSerial)) {
-                        continue;
-                    }
+            JsonElement measurementsElement = properties.get("measurements");
+            if (measurementsElement == null || !measurementsElement.isJsonObject()) {
+                logger.debug("Measurements element is not a JsonObject");
+                return consumptionSeries;
+            }
 
-                    JsonObject consumptionData = meter.getAsJsonObject("consumption");
-                    if (consumptionData == null) {
-                        continue;
-                    }
+            JsonObject measurements = measurementsElement.getAsJsonObject();
+            JsonArray edges = measurements.getAsJsonArray("edges");
 
-                    JsonArray edges = consumptionData.getAsJsonArray("edges");
-                    if (edges == null) {
-                        continue;
-                    }
+            if (edges == null) {
+                return consumptionSeries;
+            }
 
-                    QuantityType<Energy> latestValue = null;
-                    Instant latestTime = null;
+            QuantityType<Energy> latestValue = null;
+            Instant latestTime = null;
 
-                    for (JsonElement edge : edges) {
-                        JsonObject node = edge.getAsJsonObject().getAsJsonObject("node");
-                        Instant timestamp = Instant.parse(node.get("startAt").getAsString());
-                        QuantityType<Energy> value = QuantityType.valueOf(node.get("value").getAsDouble(),
-                                Units.KILOWATT_HOUR);
-                        consumptionSeries.add(timestamp, value);
+            for (JsonElement edge : edges) {
+                JsonObject node = edge.getAsJsonObject().getAsJsonObject("node");
+                String readAtStr = Objects.requireNonNull(node.get("readAt").getAsString());
+                Instant timestamp = Objects.requireNonNull(Instant.parse(readAtStr));
+                QuantityType<Energy> value = QuantityType.valueOf(node.get("value").getAsDouble(), Units.KILOWATT_HOUR);
+                consumptionSeries.add(timestamp, value);
 
-                        // Track latest value for current state update
-                        if (latestTime == null || timestamp.isAfter(latestTime)) {
-                            latestTime = timestamp;
-                            latestValue = value;
-                        }
-                    }
-
-                    // Store latest value in series metadata for state update
-                    if (latestValue != null) {
-                        consumptionSeries.add(Instant.now(), latestValue);
-                    }
+                // Track latest value for current state update
+                if (latestTime == null || timestamp.isAfter(latestTime)) {
+                    latestTime = timestamp;
+                    latestValue = value;
                 }
             }
+
+            // Store latest value in series metadata for state update
+            if (latestValue != null) {
+                consumptionSeries.add(Objects.requireNonNull(Instant.now()), latestValue);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse consumption data: {}", e.getMessage(), e);
         }
 
         return consumptionSeries;
     }
 
     private TimeSeries createGasConsumptionTimeSeries(String consumption) {
-        JsonObject graphqlResponse = JsonParser.parseString(consumption).getAsJsonObject();
         TimeSeries consumptionSeries = new TimeSeries(Policy.ADD);
 
-        JsonObject data = graphqlResponse.getAsJsonObject("data");
-        if (data == null || !data.has("account")) {
-            return consumptionSeries;
-        }
+        try {
+            JsonObject graphqlResponse = JsonParser.parseString(consumption).getAsJsonObject();
 
-        JsonObject account = data.getAsJsonObject("account");
-        JsonArray properties = account.getAsJsonArray("properties");
-
-        if (properties == null || properties.size() == 0) {
-            return consumptionSeries;
-        }
-
-        for (JsonElement propElement : properties) {
-            JsonObject property = propElement.getAsJsonObject();
-            JsonArray meterPoints = property.getAsJsonArray("gasMeterPoints");
-
-            if (meterPoints == null) {
-                continue;
+            // Navigate through GraphQL measurements response structure (same as electricity)
+            JsonObject data = graphqlResponse.getAsJsonObject("data");
+            if (data == null || !data.has("properties")) {
+                return consumptionSeries;
             }
 
-            for (JsonElement mpElement : meterPoints) {
-                JsonObject meterPoint = mpElement.getAsJsonObject();
-                JsonArray meters = meterPoint.getAsJsonArray("meters");
+            JsonElement propertiesElement = data.get("properties");
+            if (propertiesElement == null || !propertiesElement.isJsonArray()) {
+                logger.debug("Properties element is not a JsonArray");
+                return consumptionSeries;
+            }
 
-                if (meters == null) {
-                    continue;
-                }
+            JsonArray propertiesArray = propertiesElement.getAsJsonArray();
+            if (propertiesArray.isEmpty()) {
+                return consumptionSeries;
+            }
 
-                for (JsonElement meterElement : meters) {
-                    JsonObject meter = meterElement.getAsJsonObject();
-                    String serial = meter.get("serialNumber").getAsString();
+            JsonObject properties = propertiesArray.get(0).getAsJsonObject();
+            if (!properties.has("measurements")) {
+                return consumptionSeries;
+            }
 
-                    if (!serial.equals(gasMeterSerial)) {
-                        continue;
-                    }
+            JsonElement measurementsElement = properties.get("measurements");
+            if (measurementsElement == null || !measurementsElement.isJsonObject()) {
+                logger.debug("Measurements element is not a JsonObject");
+                return consumptionSeries;
+            }
 
-                    JsonObject consumptionData = meter.getAsJsonObject("consumption");
-                    if (consumptionData == null) {
-                        continue;
-                    }
+            JsonObject measurements = measurementsElement.getAsJsonObject();
+            JsonArray edges = measurements.getAsJsonArray("edges");
 
-                    JsonArray edges = consumptionData.getAsJsonArray("edges");
-                    if (edges == null) {
-                        continue;
-                    }
+            if (edges == null) {
+                return consumptionSeries;
+            }
 
-                    QuantityType<Energy> latestValue = null;
-                    Instant latestTime = null;
+            QuantityType<Energy> latestValue = null;
+            Instant latestTime = null;
 
-                    for (JsonElement edge : edges) {
-                        JsonObject node = edge.getAsJsonObject().getAsJsonObject("node");
-                        Instant timestamp = Instant.parse(node.get("startAt").getAsString());
-                        QuantityType<Energy> value = QuantityType.valueOf(node.get("value").getAsDouble(),
-                                Units.KILOWATT_HOUR);
-                        consumptionSeries.add(timestamp, value);
+            for (JsonElement edge : edges) {
+                JsonObject node = edge.getAsJsonObject().getAsJsonObject("node");
+                String readAtStr = Objects.requireNonNull(node.get("readAt").getAsString());
+                Instant timestamp = Objects.requireNonNull(Instant.parse(readAtStr));
+                QuantityType<Energy> value = QuantityType.valueOf(node.get("value").getAsDouble(), Units.KILOWATT_HOUR);
+                consumptionSeries.add(timestamp, value);
 
-                        if (latestTime == null || timestamp.isAfter(latestTime)) {
-                            latestTime = timestamp;
-                            latestValue = value;
-                        }
-                    }
-
-                    if (latestValue != null) {
-                        consumptionSeries.add(Instant.now(), latestValue);
-                    }
+                // Track latest value for current state update
+                if (latestTime == null || timestamp.isAfter(latestTime)) {
+                    latestTime = timestamp;
+                    latestValue = value;
                 }
             }
+
+            // Store latest value in series metadata for state update
+            if (latestValue != null) {
+                consumptionSeries.add(Objects.requireNonNull(Instant.now()), latestValue);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse gas consumption data: {}", e.getMessage(), e);
         }
 
         return consumptionSeries;
     }
 
     private void updateConsumption(boolean export) {
-        // Consumption data has a 24-48 hour delay, so query from 7 days ago to 2 days ago
+        // Query 7 days of data using multiple API calls (API limit is 100 records per query)
+        // 7 days of half-hourly data = 336 records, so we need multiple queries
         Instant now = Instant.now();
-        Instant endDate = now.minus(2, ChronoUnit.DAYS);
-        Instant startDate = endDate.minus(5, ChronoUnit.DAYS);
-        String mpan = (export) ? mpanExport : mpanImport;
         String id = (export) ? "export" : "consumption";
         ChannelUID consumptionUID = new ChannelUID(thing.getUID(), id);
 
         try {
-            String responseData = connection.getConsumptionData(apiKey, accountNumber, mpan, meterSerial, startDate,
-                    endDate);
-            TimeSeries series = createConsumptionTimeSeries(responseData);
-            sendTimeSeries(consumptionUID, series);
+            TimeSeries combinedSeries = new TimeSeries(Policy.ADD);
+
+            // Query in 2-day chunks (96 records each, safely under 100 limit)
+            // Start from 7 days ago and work forward
+            for (int daysBack = 7; daysBack > 0; daysBack -= 2) {
+                Instant chunkEnd = now.minus(daysBack - 2, ChronoUnit.DAYS);
+                Instant chunkStart = now.minus(daysBack, ChronoUnit.DAYS);
+
+                // Don't query beyond current time
+                if (chunkEnd.isAfter(now)) {
+                    chunkEnd = now;
+                }
+
+                String responseData;
+                if (export) {
+                    responseData = connection.getExportData(apiKey, accountNumber, electricityDeviceId,
+                            Objects.requireNonNull(chunkStart), Objects.requireNonNull(chunkEnd));
+                } else {
+                    responseData = connection.getConsumptionData(apiKey, accountNumber, electricityDeviceId,
+                            Objects.requireNonNull(chunkStart), Objects.requireNonNull(chunkEnd));
+                }
+
+                TimeSeries chunkSeries = createConsumptionTimeSeries(responseData);
+
+                // Add all data points from this chunk to the combined series
+                chunkSeries.getStates().forEach(entry -> combinedSeries.add(entry.timestamp(), entry.state()));
+            }
+
+            sendTimeSeries(consumptionUID, combinedSeries);
 
             // Also update current state with the most recent value for immediate visibility
-            if (series.size() > 0) {
-                series.getStates().reduce((first, second) -> second)
+            if (combinedSeries.size() > 0) {
+                combinedSeries.getStates().reduce((first, second) -> second)
                         .ifPresent(entry -> updateState(consumptionUID, entry.state()));
             }
         } catch (Exception e) {
@@ -326,63 +324,98 @@ public class OctopusApiHandler extends BaseThingHandler {
         updateStatus(ThingStatus.ONLINE);
     }
 
-    private TimeSeries[] createAgileTimeSeries(String agile) {
+    /**
+     * Create TimeSeries from tariff data stored during initialization.
+     * Handles different tariff types: HalfHourly, Standard, DayNight, ThreeRate, Prepay.
+     */
+    private TimeSeries[] createTimeSeriesFromTariffData(@Nullable JsonObject tariffData) {
+        TimeSeries[] rates = new TimeSeries[2];
+        rates[0] = new TimeSeries(Policy.REPLACE);
+        rates[1] = new TimeSeries(Policy.REPLACE);
 
-        JsonObject graphqlResponse = JsonParser.parseString(agile).getAsJsonObject();
-        TimeSeries[] agileRates = new TimeSeries[2];
-
-        agileRates[0] = new TimeSeries(Policy.REPLACE);
-        agileRates[1] = new TimeSeries(Policy.REPLACE);
-
-        JsonObject data = graphqlResponse.getAsJsonObject("data");
-        if (data == null || !data.has("applicableRates")) {
-            return agileRates;
+        if (tariffData == null) {
+            return rates;
         }
 
-        JsonObject applicableRates = data.getAsJsonObject("applicableRates");
-        JsonArray edges = applicableRates.getAsJsonArray("edges");
+        try {
+            // Check if this is a HalfHourlyTariff (e.g., Agile) with unitRates array
+            if (tariffData.has("unitRates") && !tariffData.get("unitRates").isJsonNull()
+                    && tariffData.get("unitRates").isJsonArray()) {
+                JsonArray unitRates = tariffData.getAsJsonArray("unitRates");
+                for (JsonElement rateElement : unitRates) {
+                    if (!rateElement.isJsonObject()) {
+                        continue;
+                    }
+                    JsonObject rate = rateElement.getAsJsonObject();
+                    if (rate.has("validFrom") && !rate.get("validFrom").isJsonNull()) {
+                        Instant timestamp = Instant.parse(rate.get("validFrom").getAsString());
 
-        if (edges == null) {
-            return agileRates;
+                        // Get value (inc VAT) in pence, convert to pounds
+                        double valueIncVatPence = rate.get("value").getAsDouble();
+                        BigDecimal valueIncVatPounds = new BigDecimal(valueIncVatPence).divide(new BigDecimal("100"), 4,
+                                RoundingMode.HALF_UP);
+
+                        // Get preVatValue in pence, convert to pounds
+                        double valueExcVatPence = rate.get("preVatValue").getAsDouble();
+                        BigDecimal valueExcVatPounds = new BigDecimal(valueExcVatPence).divide(new BigDecimal("100"), 4,
+                                RoundingMode.HALF_UP);
+
+                        rates[0].add(timestamp, new DecimalType(valueIncVatPounds));
+                        rates[1].add(timestamp, new DecimalType(valueExcVatPounds));
+                    }
+                }
+            } else {
+                // For non-time-varying tariffs (Standard, Prepay), create a single rate entry
+                // For time-varying tariffs (DayNight, ThreeRate), we'd need to calculate the applicable rate
+                // based on time of day, but that requires knowing the tariff structure times
+                Instant now = Instant.now();
+
+                if (tariffData.has("unitRate") && !tariffData.get("unitRate").isJsonNull()) {
+                    // StandardTariff or PrepayTariff
+                    double unitRatePence = tariffData.get("unitRate").getAsDouble();
+                    double preVatUnitRatePence = tariffData.get("preVatUnitRate").getAsDouble();
+
+                    BigDecimal unitRatePounds = new BigDecimal(unitRatePence).divide(new BigDecimal("100"), 4,
+                            RoundingMode.HALF_UP);
+                    BigDecimal preVatUnitRatePounds = new BigDecimal(preVatUnitRatePence).divide(new BigDecimal("100"),
+                            4, RoundingMode.HALF_UP);
+
+                    // Add a single point for current time
+                    rates[0].add(now, new DecimalType(unitRatePounds));
+                    rates[1].add(now, new DecimalType(preVatUnitRatePounds));
+                } else if (tariffData.has("dayRate") && !tariffData.get("dayRate").isJsonNull()) {
+                    // DayNightTariff or ThreeRateTariff - for now, just use day rate
+                    // A full implementation would need to determine current time period
+                    double dayRatePence = tariffData.get("dayRate").getAsDouble();
+                    double preVatDayRatePence = tariffData.get("preVatDayRate").getAsDouble();
+
+                    BigDecimal dayRatePounds = new BigDecimal(dayRatePence).divide(new BigDecimal("100"), 4,
+                            RoundingMode.HALF_UP);
+                    BigDecimal preVatDayRatePounds = new BigDecimal(preVatDayRatePence).divide(new BigDecimal("100"), 4,
+                            RoundingMode.HALF_UP);
+
+                    rates[0].add(now, new DecimalType(dayRatePounds));
+                    rates[1].add(now, new DecimalType(preVatDayRatePounds));
+
+                    logger.debug("Using day rate for time-varying tariff. Full time-of-day logic not implemented.");
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to create tariff time series: {}", e.getMessage(), e);
         }
 
-        for (JsonElement edge : edges) {
-            JsonObject node = edge.getAsJsonObject().getAsJsonObject("node");
-            Instant timestamp = Instant.parse(node.get("validFrom").getAsString());
-
-            // GraphQL API returns 'value' field (price including VAT in pence/kWh)
-            BigDecimal valueIncVatPence = new BigDecimal(node.get("value").getAsString());
-
-            // Convert from pence to pounds
-            BigDecimal valueIncVatPounds = valueIncVatPence.divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP);
-
-            // Calculate ex-VAT value (domestic electricity VAT is 5%, so divide by 1.05)
-            BigDecimal valueExcVatPounds = valueIncVatPounds.divide(new BigDecimal("1.05"), 4, RoundingMode.HALF_UP);
-
-            logger.debug("Rate at {}: inc-VAT={}, exc-VAT={}", timestamp, valueIncVatPounds, valueExcVatPounds);
-
-            // Store as dimensionless DecimalType (values are in GBP per kWh)
-            DecimalType incVatDecimal = new DecimalType(valueIncVatPounds);
-            DecimalType excVatDecimal = new DecimalType(valueExcVatPounds);
-
-            logger.debug("DecimalType values: inc-VAT={}, exc-VAT={}", incVatDecimal, excVatDecimal);
-
-            agileRates[0].add(timestamp, incVatDecimal);
-            agileRates[1].add(timestamp, excVatDecimal);
-        }
-
-        return agileRates;
+        return rates;
     }
 
     private void updateGasConsumption() {
         Instant now = Instant.now();
-        Instant endDate = now.minus(2, ChronoUnit.DAYS);
-        Instant startDate = endDate.minus(5, ChronoUnit.DAYS);
+        Instant endDate = now;
+        Instant startDate = now.minus(3, ChronoUnit.DAYS);
         ChannelUID gasConsumptionUID = new ChannelUID(thing.getUID(), "gasConsumption");
 
         try {
-            String responseData = connection.getGasConsumptionData(apiKey, accountNumber, mprn, gasMeterSerial,
-                    startDate, endDate);
+            String responseData = connection.getGasConsumptionData(apiKey, accountNumber, gasDeviceId,
+                    Objects.requireNonNull(startDate), Objects.requireNonNull(endDate));
             TimeSeries series = createGasConsumptionTimeSeries(responseData);
             sendTimeSeries(gasConsumptionUID, series);
 
@@ -396,23 +429,18 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     private void updateGasTariffRates() {
-        Instant now = Instant.now();
-        Instant start = now;
-        Instant end = now.plus(24, ChronoUnit.HOURS);
         ChannelUID gasRatesUID = new ChannelUID(thing.getUID(), "gasRates");
         ChannelUID gasExRatesUID = new ChannelUID(thing.getUID(), "gasExRates");
 
-        TimeSeries[] gasRates = new TimeSeries[2];
-        try {
-            String responseData = connection.getAgileRates(apiKey, accountNumber, mprn, start, end);
-            gasRates = createAgileTimeSeries(responseData);
-        } catch (Exception e) {
-            logger.debug("Failed to fetch gas rates: {}", e.getMessage());
+        if (gasTariffData == null) {
+            logger.debug("No gas tariff data available");
             return;
         }
 
-        sendTimeSeries(gasRatesUID, gasRates[0]);
-        sendTimeSeries(gasExRatesUID, gasRates[1]);
+        TimeSeries[] gasRates = createTimeSeriesFromTariffData(gasTariffData);
+
+        sendTimeSeries(gasRatesUID, Objects.requireNonNull(gasRates[0]));
+        sendTimeSeries(gasExRatesUID, Objects.requireNonNull(gasRates[1]));
 
         if (gasRates[0].size() > 0) {
             gasRates[0].getStates().reduce((first, second) -> second)
@@ -425,25 +453,22 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     private void updateCurrentTariffRates() {
-        Instant now = Instant.now();
-        Instant start = now;
-        Instant end = now.plus(24, ChronoUnit.HOURS);
         ChannelUID currentRatesUID = new ChannelUID(thing.getUID(), "currentRates");
         ChannelUID currentExRatesUID = new ChannelUID(thing.getUID(), "currentExRates");
 
-        TimeSeries[] currentRates = new TimeSeries[2];
-        try {
-            // Use GraphQL applicableRates query which returns current account tariff rates
-            String responseData = connection.getAgileRates(apiKey, accountNumber, mpanImport, start, end);
-            currentRates = createAgileTimeSeries(responseData);
-        } catch (Exception e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());
+        if (electricityTariffData == null) {
+            logger.debug("No electricity tariff data available");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "No tariff data available from initialization");
             return;
         }
+
+        TimeSeries[] currentRates = createTimeSeriesFromTariffData(electricityTariffData);
+
         logger.debug("Sending inc-VAT rates to channel {} with {} entries", currentRatesUID, currentRates[0].size());
         logger.debug("Sending exc-VAT rates to channel {} with {} entries", currentExRatesUID, currentRates[1].size());
-        sendTimeSeries(currentRatesUID, currentRates[0]);
-        sendTimeSeries(currentExRatesUID, currentRates[1]);
+        sendTimeSeries(currentRatesUID, Objects.requireNonNull(currentRates[0]));
+        sendTimeSeries(currentExRatesUID, Objects.requireNonNull(currentRates[1]));
 
         // Update current state with the most recent value from each TimeSeries
         if (currentRates[0].size() > 0) {
@@ -459,12 +484,24 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     private void pollTask() {
+        if (thing.getStatus() == ThingStatus.REMOVING || thing.getStatus() == ThingStatus.REMOVED) {
+            return;
+        }
+
+        try {
+            // Refresh account details to update balance, tariff info, and cached tariff data
+            queryAccountDetails();
+        } catch (Exception e) {
+            logger.debug("Failed to refresh account details: {}", e.getMessage());
+            // Continue with other updates even if this fails
+        }
+
         updateConsumption(false);
-        if (!mpanExport.isEmpty()) {
+        if (hasExportMeter) {
             updateConsumption(true);
         }
         updateCurrentTariffRates();
-        if (!mprn.isEmpty()) {
+        if (!gasDeviceId.isEmpty()) {
             updateGasConsumption();
             updateGasTariffRates();
         }
@@ -483,96 +520,211 @@ public class OctopusApiHandler extends BaseThingHandler {
         }
 
         JsonObject account = data.getAsJsonObject("account");
-        JsonArray properties = account.getAsJsonArray("properties");
 
-        if (properties == null || properties.size() == 0) {
-            throw new Exception("No properties found for account");
+        // Update account balance
+        if (account.has("balance") && !account.get("balance").isJsonNull()) {
+            // Balance is in pence, convert to pounds
+            double balancePence = account.get("balance").getAsDouble();
+            double balancePounds = balancePence / 100.0;
+            updateState(new ChannelUID(thing.getUID(), "accountBalance"), new DecimalType(balancePounds));
+            logger.debug("Account balance: \u00a3{}", String.format("%.2f", balancePounds));
         }
 
-        // Get first property
-        JsonObject property = properties.get(0).getAsJsonObject();
-        JsonArray meterPoints = property.getAsJsonArray("electricityMeterPoints");
-
-        if (meterPoints == null || meterPoints.size() == 0) {
-            throw new Exception("No electricity meter points found");
+        // Process electricity agreements
+        JsonArray electricityAgreements = account.getAsJsonArray("electricityAgreements");
+        if (electricityAgreements != null && electricityAgreements.size() > 0) {
+            processElectricityAgreements(electricityAgreements);
+        } else {
+            throw new Exception("No electricity agreements found");
         }
 
-        // Iterate through meter points to find import and export MPANs
-        for (JsonElement mpElement : meterPoints) {
-            JsonObject meterPoint = mpElement.getAsJsonObject();
-            String mpan = meterPoint.get("mpan").getAsString();
-            JsonArray agreements = meterPoint.getAsJsonArray("agreements");
+        // Process gas agreements (optional)
+        JsonArray gasAgreements = account.getAsJsonArray("gasAgreements");
+        if (gasAgreements != null && gasAgreements.size() > 0) {
+            processGasAgreements(gasAgreements);
+        }
+    }
 
-            if (agreements == null || agreements.size() == 0) {
+    private void processElectricityAgreements(JsonArray electricityAgreements) {
+        for (JsonElement agreementElement : electricityAgreements) {
+            JsonObject agreement = agreementElement.getAsJsonObject();
+            JsonObject meterPoint = agreement.getAsJsonObject("meterPoint");
+
+            if (meterPoint == null) {
                 continue;
             }
 
-            // Check if this is export based on tariff name containing "export" or "outgoing"
-            boolean isExport = false;
-            for (JsonElement agElement : agreements) {
-                JsonObject agreement = agElement.getAsJsonObject();
-                JsonObject tariff = agreement.getAsJsonObject("tariff");
+            // Get tariff information from agreements
+            JsonArray agreements = meterPoint.getAsJsonArray("agreements");
+            String tariffName = "";
+            String tariffDescription = "";
+            double standingCharge = 0.0;
+            JsonObject tariff = null;
+
+            if (agreements != null && agreements.size() > 0) {
+                JsonObject currentAgreement = agreements.get(0).getAsJsonObject();
+                tariff = currentAgreement.getAsJsonObject("tariff");
 
                 if (tariff != null) {
-                    String fullName = tariff.has("fullName") ? tariff.get("fullName").getAsString().toLowerCase() : "";
-                    String displayName = tariff.has("displayName")
-                            ? tariff.get("displayName").getAsString().toLowerCase()
-                            : "";
+                    if (tariff.has("displayName") && !tariff.get("displayName").isJsonNull()) {
+                        tariffName = tariff.get("displayName").getAsString();
+                    }
+                    if (tariff.has("description") && !tariff.get("description").isJsonNull()) {
+                        tariffDescription = tariff.get("description").getAsString();
+                    }
+                    if (tariff.has("standingCharge") && !tariff.get("standingCharge").isJsonNull()) {
+                        // Standing charge is in pence, convert to pounds
+                        standingCharge = tariff.get("standingCharge").getAsDouble() / 100.0;
+                    }
+                }
+            }
 
-                    if (fullName.contains("export") || fullName.contains("outgoing") || displayName.contains("export")
-                            || displayName.contains("outgoing")) {
+            // Determine if this is import or export based on meter point
+            // Export meters will have smartExportElectricityMeter, import will have smartImportElectricityMeter
+            boolean isExport = false;
+            JsonArray meters = meterPoint.getAsJsonArray("meters");
+
+            if (meters != null && meters.size() > 0) {
+                for (JsonElement meterElement : meters) {
+                    JsonObject meter = meterElement.getAsJsonObject();
+
+                    // Check for export meter
+                    if (meter.has("smartExportElectricityMeter")
+                            && !meter.get("smartExportElectricityMeter").isJsonNull()) {
                         isExport = true;
-                        break;
+                        JsonObject exportMeter = meter.getAsJsonObject("smartExportElectricityMeter");
+                        if (exportMeter.has("deviceId") && !exportMeter.get("deviceId").isJsonNull()
+                                && electricityDeviceId.isEmpty()) {
+                            electricityDeviceId = Objects.requireNonNull(exportMeter.get("deviceId").getAsString());
+                            logger.debug("Found export smart meter device ID: {}", electricityDeviceId);
+                        }
+                    }
+
+                    // Check for import meter (and device ID)
+                    if (meter.has("smartImportElectricityMeter")
+                            && !meter.get("smartImportElectricityMeter").isJsonNull()) {
+                        JsonObject importMeter = meter.getAsJsonObject("smartImportElectricityMeter");
+                        if (importMeter.has("deviceId") && !importMeter.get("deviceId").isJsonNull()
+                                && electricityDeviceId.isEmpty()) {
+                            electricityDeviceId = Objects.requireNonNull(importMeter.get("deviceId").getAsString());
+                            logger.debug("Found import smart meter device ID: {}", electricityDeviceId);
+                        }
                     }
                 }
             }
 
             if (isExport) {
-                this.mpanExport = mpan;
+                hasExportMeter = true;
             } else {
-                this.mpanImport = mpan;
+                // Store electricity tariff data for rate updates
+                if (tariff != null) {
+                    electricityTariffData = tariff;
+                }
+
+                // Update electricity tariff channels for import meter
+                if (!tariffName.isEmpty()) {
+                    updateState(new ChannelUID(thing.getUID(), "electricityTariffName"),
+                            new org.openhab.core.library.types.StringType(tariffName));
+                    logger.debug("Electricity tariff name: {}", tariffName);
+                }
+                if (!tariffDescription.isEmpty()) {
+                    updateState(new ChannelUID(thing.getUID(), "electricityTariffDescription"),
+                            new org.openhab.core.library.types.StringType(tariffDescription));
+                    logger.debug("Electricity tariff description: {}", tariffDescription);
+                }
+                if (standingCharge > 0) {
+                    updateState(new ChannelUID(thing.getUID(), "electricityStandingCharge"),
+                            new DecimalType(standingCharge));
+                    logger.debug("Electricity standing charge: \u00a3{}", String.format("%.2f", standingCharge));
+                }
+            }
+        }
+    }
+
+    private void processGasAgreements(JsonArray gasAgreements) {
+        for (JsonElement agreementElement : gasAgreements) {
+            JsonObject agreement = agreementElement.getAsJsonObject();
+            JsonObject meterPoint = agreement.getAsJsonObject("meterPoint");
+
+            if (meterPoint == null) {
+                continue;
             }
 
-            // Get meter serial from first meter
+            // Get tariff information from agreements
+            JsonArray agreements = meterPoint.getAsJsonArray("agreements");
+            String tariffName = "";
+            String tariffDescription = "";
+            double standingCharge = 0.0;
+            JsonObject tariff = null;
+
+            if (agreements != null && agreements.size() > 0) {
+                JsonObject currentAgreement = agreements.get(0).getAsJsonObject();
+                tariff = currentAgreement.getAsJsonObject("tariff");
+
+                if (tariff != null) {
+                    if (tariff.has("displayName") && !tariff.get("displayName").isJsonNull()) {
+                        tariffName = tariff.get("displayName").getAsString();
+                    }
+                    if (tariff.has("description") && !tariff.get("description").isJsonNull()) {
+                        tariffDescription = tariff.get("description").getAsString();
+                    }
+                    if (tariff.has("standingCharge") && !tariff.get("standingCharge").isJsonNull()) {
+                        // Standing charge is in pence, convert to pounds
+                        standingCharge = tariff.get("standingCharge").getAsDouble() / 100.0;
+                    }
+
+                    // Store gas tariff data for rate updates
+                    gasTariffData = tariff;
+                }
+            }
+
+            // Get gas device ID
             JsonArray meters = meterPoint.getAsJsonArray("meters");
-            if (meters != null && meters.size() > 0 && this.meterSerial.isEmpty()) {
+            if (meters != null && meters.size() > 0) {
                 JsonObject meter = meters.get(0).getAsJsonObject();
-                this.meterSerial = meter.get("serialNumber").getAsString();
+
+                // Check for smart gas meter device ID
+                if (meter.has("smartGasMeter") && !meter.get("smartGasMeter").isJsonNull()) {
+                    JsonObject gasMeter = meter.getAsJsonObject("smartGasMeter");
+                    if (gasMeter.has("deviceId") && !gasMeter.get("deviceId").isJsonNull()) {
+                        gasDeviceId = Objects.requireNonNull(gasMeter.get("deviceId").getAsString());
+                        logger.debug("Found gas smart meter device ID: {}", gasDeviceId);
+                    }
+                }
             }
-        }
 
-        if (mpanImport.isEmpty()) {
-            throw new Exception("No import MPAN found");
-        }
-        if (meterSerial.isEmpty()) {
-            throw new Exception("No meter serial number found");
-        }
-
-        logger.info("Discovered MPANs - Import: {}, Export: {}, Meter Serial: {}", mpanImport,
-                mpanExport.isEmpty() ? "none" : mpanExport, meterSerial);
-
-        // Query gas meter points if available
-        JsonArray gasMeterPoints = property.getAsJsonArray("gasMeterPoints");
-        if (gasMeterPoints != null && gasMeterPoints.size() > 0) {
-            JsonObject gasMeterPoint = gasMeterPoints.get(0).getAsJsonObject();
-            this.mprn = gasMeterPoint.get("mprn").getAsString();
-
-            JsonArray gasMeters = gasMeterPoint.getAsJsonArray("meters");
-            if (gasMeters != null && gasMeters.size() > 0) {
-                JsonObject gasMeter = gasMeters.get(0).getAsJsonObject();
-                this.gasMeterSerial = gasMeter.get("serialNumber").getAsString();
+            // Update gas tariff channels
+            if (!tariffName.isEmpty()) {
+                updateState(new ChannelUID(thing.getUID(), "gasTariffName"),
+                        new org.openhab.core.library.types.StringType(tariffName));
+                logger.debug("Gas tariff name: {}", tariffName);
             }
-            logger.info("Discovered gas - MPRN: {}, Meter Serial: {}", mprn, gasMeterSerial);
+            if (!tariffDescription.isEmpty()) {
+                updateState(new ChannelUID(thing.getUID(), "gasTariffDescription"),
+                        new org.openhab.core.library.types.StringType(tariffDescription));
+                logger.debug("Gas tariff description: {}", tariffDescription);
+            }
+            if (standingCharge > 0) {
+                updateState(new ChannelUID(thing.getUID(), "gasStandingCharge"), new DecimalType(standingCharge));
+                logger.debug("Gas standing charge: \u00a3{}", String.format("%.2f", standingCharge));
+            }
+
+            break; // Only process first gas agreement
         }
     }
 
     private void pollLiveData() {
-        if (deviceId.isEmpty()) {
+        // Don't poll if handler is being disposed
+        if (thing.getStatus() == ThingStatus.REMOVING || thing.getStatus() == ThingStatus.REMOVED) {
+            return;
+        }
+
+        if (electricityDeviceId.isEmpty()) {
             return;
         }
 
         try {
-            String responseData = connection.getSmartMeterTelemetry(apiKey, deviceId);
+            String responseData = connection.getSmartMeterTelemetry(apiKey, electricityDeviceId);
             updateLiveTelemetry(responseData);
         } catch (Exception e) {
             logger.debug("Failed to fetch live telemetry: {}", e.getMessage());
@@ -585,22 +737,28 @@ public class OctopusApiHandler extends BaseThingHandler {
         JsonObject data = graphqlResponse.getAsJsonObject("data");
 
         if (data == null || !data.has("smartMeterTelemetry")) {
+            logger.debug("No smartMeterTelemetry data in response");
             return;
         }
 
         JsonArray telemetryArray = data.getAsJsonArray("smartMeterTelemetry");
         if (telemetryArray == null || telemetryArray.size() == 0) {
+            logger.debug("Empty smartMeterTelemetry array");
             return;
         }
 
         // Get the first (most recent) telemetry entry
         JsonObject telemetryData = telemetryArray.get(0).getAsJsonObject();
+        logger.debug("Telemetry data: {}", telemetryData);
 
         // Update demand (instant power in Watts)
         if (telemetryData.has("demand") && !telemetryData.get("demand").isJsonNull()) {
             double demandWatts = telemetryData.get("demand").getAsDouble();
             QuantityType<javax.measure.quantity.Power> demand = QuantityType.valueOf(demandWatts, Units.WATT);
             updateState(new ChannelUID(thing.getUID(), "liveDemand"), demand);
+            logger.debug("Updated liveDemand: {} W", demandWatts);
+        } else {
+            logger.debug("No demand data in telemetry");
         }
 
         // Update consumption (cumulative meter reading in Wh, convert to kWh)
@@ -608,74 +766,19 @@ public class OctopusApiHandler extends BaseThingHandler {
             double consumptionWh = telemetryData.get("consumption").getAsDouble();
             QuantityType<Energy> consumption = QuantityType.valueOf(consumptionWh / 1000.0, Units.KILOWATT_HOUR);
             updateState(new ChannelUID(thing.getUID(), "liveMeterReading"), consumption);
-        }
-    }
-
-    /**
-     * Get the smart meter device ID (GUID) for Octopus Home Mini.
-     * This is a binding action that can be called from rules.
-     */
-    public String getSmartMeterDeviceId() throws Exception {
-        String responseData = connection.getSmartDeviceId(apiKey, accountNumber);
-        JsonObject graphqlResponse = JsonParser.parseString(responseData).getAsJsonObject();
-        JsonObject data = graphqlResponse.getAsJsonObject("data");
-
-        if (data == null || !data.has("account")) {
-            throw new Exception("No account data returned from API");
+            logger.debug("Updated liveMeterReading: {} kWh", consumptionWh / 1000.0);
+        } else {
+            logger.debug("No consumption data in telemetry");
         }
 
-        JsonObject account = data.getAsJsonObject("account");
-        JsonArray agreements = account.getAsJsonArray("electricityAgreements");
-
-        if (agreements == null || agreements.size() == 0) {
-            throw new Exception("No active electricity agreements found");
+        // Update export (cumulative export meter reading in Wh, convert to kWh)
+        if (telemetryData.has("export") && !telemetryData.get("export").isJsonNull()) {
+            double exportWh = telemetryData.get("export").getAsDouble();
+            QuantityType<Energy> export = QuantityType.valueOf(exportWh / 1000.0, Units.KILOWATT_HOUR);
+            updateState(new ChannelUID(thing.getUID(), "liveExportReading"), export);
+            logger.debug("Updated liveExportReading: {} kWh", exportWh / 1000.0);
+        } else {
+            logger.debug("No export data in telemetry");
         }
-
-        // Iterate through agreements to find smart devices
-        for (JsonElement agreementElement : agreements) {
-            JsonObject agreement = agreementElement.getAsJsonObject();
-            JsonObject meterPoint = agreement.getAsJsonObject("meterPoint");
-
-            if (meterPoint == null) {
-                continue;
-            }
-
-            JsonArray meters = meterPoint.getAsJsonArray("meters");
-            if (meters == null) {
-                continue;
-            }
-
-            for (JsonElement meterElement : meters) {
-                JsonObject meter = meterElement.getAsJsonObject();
-                JsonArray smartDevices = meter.getAsJsonArray("smartDevices");
-
-                if (smartDevices == null || smartDevices.size() == 0) {
-                    continue;
-                }
-
-                // Return the first device ID found
-                JsonObject device = smartDevices.get(0).getAsJsonObject();
-                if (device.has("deviceId")) {
-                    return device.get("deviceId").getAsString();
-                }
-            }
-        }
-
-        throw new Exception(
-                "No smart meter device found. Ensure you have an Octopus Home Mini installed and configured.");
-    }
-
-    /**
-     * Update the thing configuration with the device ID and reinitialize.
-     * This is called by the action to automatically configure the binding.
-     */
-    public void updateDeviceIdConfiguration(String deviceId) {
-        Configuration configuration = editConfiguration();
-        configuration.put("deviceId", deviceId);
-        updateConfiguration(configuration);
-
-        // Reinitialize the thing to start live polling with the new device ID
-        dispose();
-        initialize();
     }
 }

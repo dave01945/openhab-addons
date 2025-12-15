@@ -7,14 +7,14 @@
 	<config-description uri="thing-type:octopusapi:settings">
 		<parameter name="refreshInterval" type="integer" required="true" min="1" max="48" unit="h">
 			<label>Refresh Interval</label>
-			<description>Time between refreshing the data in hours.</description>
+			<description>Time between refreshing the data in hours (minimum 1 hour, maximum 48 hours).</description>
 			<default>12</default>
 		</parameter>
-		<parameter name="liveRefreshInterval" type="integer" required="true" min="10" max="300" unit="s">
+		<parameter name="liveRefreshInterval" type="integer" required="true" min="60" max="300" unit="s">
 			<label>Live Data Refresh Interval</label>
-			<description>Time between refreshing live consumption data in seconds (requires Home Mini). Octopus recommends 30
-				seconds minimum to avoid rate limiting.</description>
-			<default>30</default>
+			<description>Time between refreshing live consumption data in seconds (requires Home Mini). Minimum 60 seconds,
+				maximum 300 seconds. Set higher if experiencing rate limiting.</description>
+			<default>60</default>
 		</parameter>
 		<parameter name="apiKey" type="text" required="true">
 			<label>API Key</label>
@@ -23,11 +23,6 @@
 		<parameter name="accountNumber" type="text" required="true">
 			<label>Account Number</label>
 			<description>Your Octopus Energy account number.</description>
-		</parameter>
-		<parameter name="deviceId" type="text" required="false">
-			<label>Smart Meter Device ID</label>
-			<description>Device GUID for Octopus Home Mini real-time data (format: AA-BB-CC-DD-EE-FF-GG-HH). Leave blank if you
-				don't have a Home Mini.</description>
 		</parameter>
 	</config-description>
 

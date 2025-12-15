@@ -19,6 +19,7 @@ import static org.eclipse.jetty.http.HttpStatus.TOO_MANY_REQUESTS_429;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -46,7 +47,7 @@ import com.google.gson.JsonParser;
 @NonNullByDefault
 public class OctopusApiConnection {
 
-    private final Logger logger = LoggerFactory.getLogger(OctopusApiConnection.class);
+    private final Logger logger = Objects.requireNonNull(LoggerFactory.getLogger(OctopusApiConnection.class));
 
     private final HttpClient httpClient;
     private static final String GRAPHQL_ENDPOINT = "https://api.octopus.energy/v1/graphql/";
@@ -61,13 +62,15 @@ public class OctopusApiConnection {
     /**
      * Obtain authentication token using API key.
      */
+    @SuppressWarnings("null")
     protected void obtainToken(String apiKey) {
         String mutation = String.format(
                 "{\"query\":\"mutation { obtainKrakenToken(input: {APIKey: \\\"%s\\\"}) { token refreshToken refreshExpiresIn } }\"}",
                 apiKey);
 
         logger.trace("Obtaining Kraken token");
-        JsonObject response = executeGraphQL(mutation, null);
+        String nullToken = null;
+        JsonObject response = executeGraphQL(mutation, nullToken);
 
         JsonObject data = response.getAsJsonObject("data");
         if (data != null && data.has("obtainKrakenToken")) {
@@ -94,8 +97,27 @@ public class OctopusApiConnection {
 
     /**
      * Execute a GraphQL query or mutation.
+     *
+     * @param queryOrMutation The GraphQL query or mutation string
+     * @param token Authentication token (can be null for initial token request)
      */
     private JsonObject executeGraphQL(String queryOrMutation, @Nullable String token) {
+        return executeGraphQLInternal(queryOrMutation, token);
+    }
+
+    /**
+     * Execute a GraphQL query with authentication token.
+     */
+    @SuppressWarnings("null")
+    private JsonObject executeGraphQLAuthenticated(String queryOrMutation, String token) {
+        return executeGraphQLInternal(queryOrMutation, token);
+    }
+
+    /**
+     * Internal method to execute GraphQL requests.
+     */
+    @SuppressWarnings("null")
+    private JsonObject executeGraphQLInternal(String queryOrMutation, @Nullable String token) {
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace("GraphQL request: {}", queryOrMutation);
@@ -124,6 +146,13 @@ public class OctopusApiConnection {
                     // Check for GraphQL errors
                     if (jsonObject.has("errors")) {
                         String errorMessage = extractGraphQLError(jsonObject);
+
+                        // Check if this is a rate limit error
+                        if (isRateLimitError(jsonObject)) {
+                            logger.debug("Rate limit error: {}", errorMessage);
+                            throw new CommunicationException("Rate limit exceeded: " + errorMessage);
+                        }
+
                         logger.debug("GraphQL errors: {}", errorMessage);
                         throw new ConfigurationException(errorMessage);
                     }
@@ -157,25 +186,46 @@ public class OctopusApiConnection {
     }
 
     /**
-     * Get electricity meter readings using GraphQL.
+     * Get electricity meter readings using GraphQL measurements query.
      */
-    protected String getConsumptionData(String apiKey, String accountNumber, String mpan, String meterSerial,
-            Instant from, Instant to) {
+    @SuppressWarnings("null")
+    protected String getConsumptionData(String apiKey, String accountNumber, String deviceId, Instant from,
+            Instant to) {
         ensureValidToken(apiKey);
 
-        // GraphQL consumption query - must use edges/node structure with first parameter (max 100)
+        // GraphQL measurements query using deviceId and readingDirection filter
+        // API max limit is 100 records per query (about 2 days of half-hourly data)
         String query = String.format(
-                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { properties { electricityMeterPoints { mpan meters { serialNumber consumption(startAt: \\\"%s\\\", grouping: HALF_HOUR, timezone: \\\"Europe/London\\\", first: 100) { edges { node { startAt value } } } } } } } }\"}",
-                accountNumber, from.toString());
+                "{\"query\":\"query { properties(accountNumber: \\\"%s\\\") { measurements(first: 100, timezone: \\\"Europe/London\\\", utilityFilters: {electricityFilters: {deviceId: \\\"%s\\\", readingDirection: CONSUMPTION}}, startAt: \\\"%s\\\") { edges { node { readAt value unit } } } } }\"}",
+                accountNumber, deviceId, from.toString());
 
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
     }
 
     /**
-     * Get agile tariff rates using GraphQL.
+     * Get electricity meter export readings using GraphQL measurements query.
+     * Export data uses GENERATION readingDirection to get solar/generation export.
      */
-    protected String getAgileRates(String apiKey, String accountNumber, String mpan, Instant from, Instant to) {
+    @SuppressWarnings("null")
+    protected String getExportData(String apiKey, String accountNumber, String deviceId, Instant from, Instant to) {
+        ensureValidToken(apiKey);
+
+        // GraphQL measurements query using deviceId and GENERATION readingDirection filter
+        // API max limit is 100 records per query (about 2 days of half-hourly data)
+        String query = String.format(
+                "{\"query\":\"query { properties(accountNumber: \\\"%s\\\") { measurements(first: 100, timezone: \\\"Europe/London\\\", utilityFilters: {electricityFilters: {deviceId: \\\"%s\\\", readingDirection: GENERATION}}, startAt: \\\"%s\\\") { edges { node { readAt value unit } } } } }\"}",
+                accountNumber, deviceId, from.toString());
+
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
+    }
+
+    /**
+     * Get tariff rates using GraphQL.
+     */
+    @SuppressWarnings("null")
+    protected String getTariffRates(String apiKey, String accountNumber, String mpan, Instant from, Instant to) {
         ensureValidToken(apiKey);
 
         // GraphQL agile rates query - first parameter max is 100
@@ -183,69 +233,59 @@ public class OctopusApiConnection {
                 "{\"query\":\"query { applicableRates(accountNumber: \\\"%s\\\", mpxn: \\\"%s\\\", startAt: \\\"%s\\\", endAt: \\\"%s\\\", first: 100) { edges { node { validFrom validTo value } } } }\"}",
                 accountNumber, mpan, from.toString(), to.toString());
 
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
     }
 
     /**
      * Get real-time smart meter telemetry data (requires Octopus Home Mini).
      */
+    @SuppressWarnings("null")
     protected String getSmartMeterTelemetry(String apiKey, String deviceId) {
         ensureValidToken(apiKey);
 
         // GraphQL smartMeterTelemetry query
         String query = String.format(
-                "{\"query\":\"query { smartMeterTelemetry(deviceId: \\\"%s\\\") { readAt demand consumption } }\"}",
+                "{\"query\":\"query { smartMeterTelemetry(deviceId: \\\"%s\\\") { readAt demand consumption export } }\"}",
                 deviceId);
 
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
     }
 
     /**
-     * Get gas consumption data.
+     * Get gas consumption data using GraphQL measurements query.
      */
-    protected String getGasConsumptionData(String apiKey, String accountNumber, String mprn, String meterSerial,
-            Instant startDate, Instant endDate) {
+    @SuppressWarnings("null")
+    protected String getGasConsumptionData(String apiKey, String accountNumber, String gasDeviceId, Instant startDate,
+            Instant endDate) {
         ensureValidToken(apiKey);
 
+        // GraphQL measurements query using gasDeviceId filter
+        // API max limit is 100 records per query (about 2 days of half-hourly data)
         String query = String.format(
-                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { properties { gasMeterPoints { mprn meters { serialNumber consumption(startAt: \\\"%s\\\", grouping: HALF_HOUR, timezone: \\\"Europe/London\\\", first: 100) { edges { node { startAt value } } } } } } } }\"}",
-                accountNumber, startDate);
+                "{\"query\":\"query { properties(accountNumber: \\\"%s\\\") { measurements(first: 100, timezone: \\\"Europe/London\\\", utilityFilters: {gasFilters: {deviceId: \\\"%s\\\"}}, startAt: \\\"%s\\\") { edges { node { readAt value unit } } } } }\"}",
+                accountNumber, gasDeviceId, startDate.toString());
 
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
     }
 
     /**
-     * Get smart meter device ID (GUID) for Home Mini.
+     * Get comprehensive account details including balance, MPANs, MPRNs, meter serials, tariffs, and device IDs.
      */
-    protected String getSmartDeviceId(String apiKey, String accountNumber) {
-        ensureValidToken(apiKey);
-
-        // GraphQL query to find smart device ID
-        String query = String.format(
-                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { electricityAgreements(active: true) { meterPoint { meters(includeInactive: false) { smartDevices { deviceId } } } } } }\"}",
-                accountNumber);
-
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
-    }
-
-    /**
-     * Get account details including MPANs, MPRNs and meter serials.
-     */
+    @SuppressWarnings("null")
     protected String getAccountDetails(String apiKey, String accountNumber) {
         ensureValidToken(apiKey);
 
-        // GraphQL query to get account properties with electricity and gas meter details
-        // Use inline fragment to access TariffType fields
+        // Comprehensive GraphQL query to get all account information in one call
+        // Includes balance, agreements with tariffs, standing charges, smart meter device IDs, and rate structures
         String query = String.format(
-                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { properties { electricityMeterPoints { mpan agreements { validFrom validTo tariff { ... on TariffType { fullName displayName } } } meters { serialNumber } } gasMeterPoints { mprn agreements { validFrom validTo tariff { ... on TariffType { fullName displayName } } } meters { serialNumber } } } } }\"}",
+                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { balance electricityAgreements(active: true) { meterPoint { mpan meters(includeInactive: false) { serialNumber smartImportElectricityMeter { deviceId manufacturer model firmwareVersion } smartExportElectricityMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validTo validFrom tariff { ... on TariffType { productCode standingCharge isExport displayName description __typename } ... on StandardTariff { unitRate preVatUnitRate } ... on DayNightTariff { dayRate preVatDayRate nightRate preVatNightRate } ... on ThreeRateTariff { nightRate offPeakRate preVatDayRate preVatNightRate preVatOffPeakRate dayRate } ... on HalfHourlyTariff { unitRates { preVatValue value rateType validFrom validTo } } ... on PrepayTariff { preVatUnitRate unitRate } } } } } gasAgreements(active: true) { meterPoint { mprn meters(includeInactive: false) { serialNumber consumptionUnits smartGasMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validFrom validTo tariff { standingCharge productCode displayName description unitRate preVatUnitRate } } } } } }\"}",
                 accountNumber);
 
-        JsonObject response = executeGraphQL(query, authToken);
-        return response.toString();
+        JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
+        return Objects.requireNonNull(response.toString());
     }
 
     /**
@@ -257,10 +297,36 @@ public class OctopusApiConnection {
             if (errors.size() > 0) {
                 JsonObject firstError = errors.get(0).getAsJsonObject();
                 if (firstError.has("message")) {
-                    return firstError.get("message").getAsString();
+                    return Objects.requireNonNull(firstError.get("message").getAsString());
                 }
             }
         }
         return "Unknown GraphQL error";
+    }
+
+    /**
+     * Check if GraphQL error is a rate limit error.
+     */
+    private boolean isRateLimitError(JsonObject response) {
+        if (response.has("errors") && response.get("errors").isJsonArray()) {
+            var errors = response.getAsJsonArray("errors");
+            if (errors.size() > 0) {
+                JsonObject firstError = errors.get(0).getAsJsonObject();
+                // Check for rate limit error code KT-CT-1199
+                if (firstError.has("extensions")) {
+                    JsonObject extensions = firstError.getAsJsonObject("extensions");
+                    if (extensions.has("errorCode")) {
+                        String errorCode = extensions.get("errorCode").getAsString();
+                        return "KT-CT-1199".equals(errorCode);
+                    }
+                }
+                // Also check message for "Too many requests"
+                if (firstError.has("message")) {
+                    String message = firstError.get("message").getAsString();
+                    return message.toLowerCase().contains("too many requests");
+                }
+            }
+        }
+        return false;
     }
 }

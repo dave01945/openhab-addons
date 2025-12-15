@@ -12,8 +12,9 @@
  */
 package org.openhab.binding.octopusapi.internal;
 
-import static org.openhab.binding.octopusapi.internal.OctopusApiBindingConstants.*;
+import static org.openhab.binding.octopusapi.internal.OctopusApiBindingConstants.THING_TYPE_OCTOPUSAPI;
 
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -39,7 +40,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPid = "binding.octopusapi", service = ThingHandlerFactory.class)
 public class OctopusApiHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_OCTOPUSAPI);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Objects
+            .requireNonNull(Set.of(THING_TYPE_OCTOPUSAPI));
     private final HttpClient httpClient;
 
     @Activate

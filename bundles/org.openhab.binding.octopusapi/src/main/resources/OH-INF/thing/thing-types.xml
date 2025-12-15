@@ -19,6 +19,14 @@
 			<channel id="gasExRates" typeId="gasExRates"/>
 			<channel id="liveDemand" typeId="liveDemand"/>
 			<channel id="liveMeterReading" typeId="liveMeterReading"/>
+			<channel id="liveExportReading" typeId="liveExportReading"/>
+			<channel id="accountBalance" typeId="accountBalance"/>
+			<channel id="electricityTariffName" typeId="electricityTariffName"/>
+			<channel id="electricityTariffDescription" typeId="electricityTariffDescription"/>
+			<channel id="electricityStandingCharge" typeId="electricityStandingCharge"/>
+			<channel id="gasTariffName" typeId="gasTariffName"/>
+			<channel id="gasTariffDescription" typeId="gasTariffDescription"/>
+			<channel id="gasStandingCharge" typeId="gasStandingCharge"/>
 		</channels>
 
 		<config-description-ref uri="thing-type:octopusapi:settings"/>
@@ -77,5 +85,53 @@
 		<label>Live Meter Reading</label>
 		<description>Real-time cumulative meter reading (requires Octopus Home Mini)</description>
 		<state pattern="%.3f %unit%"></state>
+	</channel-type>
+	<channel-type id="liveExportReading">
+		<item-type>Number:Energy</item-type>
+		<label>Live Export Reading</label>
+		<description>Real-time cumulative export meter reading (requires Octopus Home Mini)</description>
+		<state pattern="%.3f %unit%"></state>
+	</channel-type>
+	<channel-type id="accountBalance">
+		<item-type>Number</item-type>
+		<label>Account Balance</label>
+		<description>Current account balance in GBP (negative = credit)</description>
+		<state pattern="£%.2f" readOnly="true"></state>
+	</channel-type>
+	<channel-type id="electricityTariffName">
+		<item-type>String</item-type>
+		<label>Electricity Tariff Name</label>
+		<description>Current electricity tariff display name</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="electricityTariffDescription">
+		<item-type>String</item-type>
+		<label>Electricity Tariff Description</label>
+		<description>Current electricity tariff description</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="electricityStandingCharge">
+		<item-type>Number</item-type>
+		<label>Electricity Standing Charge</label>
+		<description>Daily electricity standing charge in GBP</description>
+		<state pattern="£%.2f" readOnly="true"></state>
+	</channel-type>
+	<channel-type id="gasTariffName">
+		<item-type>String</item-type>
+		<label>Gas Tariff Name</label>
+		<description>Current gas tariff display name</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="gasTariffDescription">
+		<item-type>String</item-type>
+		<label>Gas Tariff Description</label>
+		<description>Current gas tariff description</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="gasStandingCharge">
+		<item-type>Number</item-type>
+		<label>Gas Standing Charge</label>
+		<description>Daily gas standing charge in GBP</description>
+		<state pattern="£%.2f" readOnly="true"></state>
 	</channel-type>
 </thing:thing-descriptions>
