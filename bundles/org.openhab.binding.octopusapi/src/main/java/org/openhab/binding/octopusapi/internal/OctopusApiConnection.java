@@ -12,13 +12,19 @@
  */
 package org.openhab.binding.octopusapi.internal;
 
+import static org.eclipse.jetty.http.HttpMethod.GET;
 import static org.eclipse.jetty.http.HttpMethod.POST;
 import static org.eclipse.jetty.http.HttpStatus.OK_200;
 import static org.eclipse.jetty.http.HttpStatus.TOO_MANY_REQUESTS_429;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +40,7 @@ import org.openhab.core.i18n.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -51,11 +58,16 @@ public class OctopusApiConnection {
 
     private final HttpClient httpClient;
     private static final String GRAPHQL_ENDPOINT = "https://api.octopus.energy/v1/graphql/";
+    private static final String REST_ENDPOINT = "https://api.octopus.energy/v1";
 
     private @Nullable String authToken;
     private @Nullable Instant tokenExpiry;
 
     public OctopusApiConnection(OctopusApiHandler handler, HttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    public OctopusApiConnection(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
@@ -230,11 +242,241 @@ public class OctopusApiConnection {
 
         // GraphQL agile rates query - first parameter max is 100
         String query = String.format(
-                "{\"query\":\"query { applicableRates(accountNumber: \\\"%s\\\", mpxn: \\\"%s\\\", startAt: \\\"%s\\\", endAt: \\\"%s\\\", first: 100) { edges { node { validFrom validTo value } } } }\"}",
+                "{\"query\":\"query { applicableRates(accountNumber: \\\"%s\\\", mpxn: \\\"%s\\\", startAt: \\\"%s\\\", endAt: \\\"%s\\\", first: 100) { edges { node { validFrom validTo valueIncVat valueExcVat } } } }\"}",
                 accountNumber, mpan, from.toString(), to.toString());
 
         JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));
         return Objects.requireNonNull(response.toString());
+    }
+
+    /**
+     * Get Agile forecast rates from public REST endpoints (no authentication required).
+     */
+    protected String getPublicAgileRates(String configuredProductCode, String configuredRegion, Instant from,
+            Instant to) {
+        String productCode = resolveAgileProductCode(configuredProductCode);
+        String region = configuredRegion.trim().isEmpty() ? "A" : configuredRegion.trim().toUpperCase();
+        String tariffCode = resolveTariffCode(productCode, region);
+
+        String fromParam = URLEncoder.encode(from.toString(), StandardCharsets.UTF_8);
+        String toParam = URLEncoder.encode(to.toString(), StandardCharsets.UTF_8);
+        String ratesUrl = String.format(
+                "%s/products/%s/electricity-tariffs/%s/standard-unit-rates/?period_from=%s&period_to=%s", REST_ENDPOINT,
+                productCode, tariffCode, fromParam, toParam);
+
+        logger.debug("Fetching public Agile rates using product {}, region {}, tariff {}", productCode, region,
+                tariffCode);
+        JsonObject response = executeRestGet(ratesUrl);
+        return Objects.requireNonNull(response.toString());
+    }
+
+    /**
+     * Get available Agile regions from public REST endpoints (no authentication required).
+     */
+    protected Collection<String> getPublicAgileRegions(String configuredProductCode) {
+        String productCode = resolveAgileProductCode(configuredProductCode);
+        JsonObject productDetails = executeRestGet(String.format("%s/products/%s/", REST_ENDPOINT, productCode));
+        JsonObject tariffs = productDetails.getAsJsonObject("single_register_electricity_tariffs");
+        if (tariffs == null) {
+            throw new ConfigurationException("No single register tariffs found for product: " + productCode);
+        }
+
+        List<String> regions = new ArrayList<>();
+        for (String key : tariffs.keySet()) {
+            if (key.startsWith("_") && key.length() > 1) {
+                JsonElement regionTariff = tariffs.get(key);
+                if (regionTariff != null && !regionTariff.isJsonNull()) {
+                    regions.add(key.substring(1));
+                }
+            }
+        }
+
+        if (regions.isEmpty()) {
+            throw new ConfigurationException("No regions found for Agile product: " + productCode);
+        }
+
+        regions.sort(String::compareTo);
+        return regions;
+    }
+
+    /**
+     * Get available Agile import product codes from public REST endpoints (no authentication required).
+     */
+    protected Collection<String> getPublicAgileProductCodes() {
+        JsonObject productsResponse = executeRestGet(REST_ENDPOINT + "/products/");
+        JsonArray results = productsResponse.getAsJsonArray("results");
+        if (results == null || results.isEmpty()) {
+            throw new ConfigurationException("No products returned by Octopus REST API");
+        }
+
+        List<JsonObject> agileProducts = new ArrayList<>();
+        for (JsonElement result : results) {
+            JsonObject product = result.getAsJsonObject();
+            if (isAgileImportProduct(product)) {
+                agileProducts.add(product);
+            }
+        }
+
+        if (agileProducts.isEmpty()) {
+            throw new ConfigurationException("No Agile import products available from Octopus REST API");
+        }
+
+        agileProducts
+                .sort(Comparator.comparing((JsonObject product) -> parseInstant(product, "available_from")).reversed());
+
+        List<String> productCodes = new ArrayList<>();
+        for (JsonObject product : agileProducts) {
+            productCodes.add(product.get("code").getAsString());
+        }
+        return productCodes;
+    }
+
+    private JsonObject executeRestGet(String url) {
+        try {
+            var request = httpClient.newRequest(url).method(GET).timeout(10, TimeUnit.SECONDS);
+            ContentResponse contentResponse = request.send();
+            int httpStatus = contentResponse.getStatus();
+            String content = contentResponse.getContentAsString();
+
+            if (httpStatus == OK_200) {
+                JsonElement jsonResponse = JsonParser.parseString(content);
+                if (jsonResponse.isJsonObject()) {
+                    return jsonResponse.getAsJsonObject();
+                }
+                throw new CommunicationException("Unexpected JSON format from REST endpoint");
+            }
+
+            logger.warn("REST request failed with HTTP {}: {}", httpStatus, content);
+            throw new CommunicationException("Unexpected HTTP status: " + httpStatus);
+        } catch (ExecutionException e) {
+            String errorMessage = e.getMessage();
+            logger.debug("ExecutionException occurred during REST request: {}", errorMessage, e);
+            throw new CommunicationException(errorMessage == null ? "@text/offline.communication-error" : errorMessage,
+                    e.getCause());
+        } catch (TimeoutException e) {
+            String errorMessage = e.getMessage();
+            logger.debug("TimeoutException occurred during REST request: {}", errorMessage, e);
+            throw new CommunicationException(errorMessage == null ? "@text/offline.communication-error" : errorMessage,
+                    e.getCause());
+        } catch (InterruptedException e) {
+            String errorMessage = e.getMessage();
+            logger.debug("InterruptedException occurred during REST request: {}", errorMessage, e);
+            Thread.currentThread().interrupt();
+            throw new CommunicationException(errorMessage == null ? "@text/offline.communication-error" : errorMessage,
+                    e.getCause());
+        }
+    }
+
+    private String resolveAgileProductCode(String configuredProductCode) {
+        JsonObject productsResponse = executeRestGet(REST_ENDPOINT + "/products/");
+        JsonArray results = productsResponse.getAsJsonArray("results");
+        if (results == null || results.isEmpty()) {
+            throw new ConfigurationException("No products returned by Octopus REST API");
+        }
+
+        String configured = configuredProductCode.trim();
+        if (!configured.isEmpty()) {
+            for (JsonElement result : results) {
+                JsonObject product = result.getAsJsonObject();
+                String code = product.get("code").getAsString();
+                if (configured.equalsIgnoreCase(code)) {
+                    return code;
+                }
+            }
+            throw new ConfigurationException("Configured Agile product code not found: " + configuredProductCode);
+        }
+
+        JsonObject selectedProduct = selectLatestAgileImportProduct(results);
+        if (selectedProduct == null) {
+            throw new ConfigurationException("No Agile import products available from Octopus REST API");
+        }
+
+        return Objects.requireNonNull(selectedProduct.get("code").getAsString());
+    }
+
+    private @Nullable JsonObject selectLatestAgileImportProduct(JsonArray products) {
+        Instant now = Instant.now();
+        JsonObject bestActive = null;
+        Instant bestActiveFrom = Instant.EPOCH;
+        JsonObject bestAny = null;
+        Instant bestAnyFrom = Instant.EPOCH;
+
+        for (JsonElement productElement : products) {
+            JsonObject product = productElement.getAsJsonObject();
+            if (!isAgileImportProduct(product)) {
+                continue;
+            }
+
+            Instant availableFrom = parseInstant(product, "available_from");
+            Instant availableTo = parseInstant(product, "available_to");
+
+            if (availableFrom.isAfter(bestAnyFrom)) {
+                bestAnyFrom = availableFrom;
+                bestAny = product;
+            }
+
+            boolean isActive = availableTo.equals(Instant.EPOCH) || availableTo.isAfter(now);
+            if (isActive && availableFrom.isAfter(bestActiveFrom)) {
+                bestActiveFrom = availableFrom;
+                bestActive = product;
+            }
+        }
+
+        return bestActive != null ? bestActive : bestAny;
+    }
+
+    private boolean isAgileImportProduct(JsonObject product) {
+        String direction = product.has("direction") && !product.get("direction").isJsonNull()
+                ? product.get("direction").getAsString()
+                : "";
+        if (!"IMPORT".equals(direction)) {
+            return false;
+        }
+
+        String code = product.has("code") && !product.get("code").isJsonNull() ? product.get("code").getAsString() : "";
+        String fullName = product.has("full_name") && !product.get("full_name").isJsonNull()
+                ? product.get("full_name").getAsString()
+                : "";
+        String displayName = product.has("display_name") && !product.get("display_name").isJsonNull()
+                ? product.get("display_name").getAsString()
+                : "";
+
+        return code.toUpperCase().contains("AGILE") || fullName.toUpperCase().contains("AGILE")
+                || displayName.toUpperCase().contains("AGILE");
+    }
+
+    private String resolveTariffCode(String productCode, String region) {
+        JsonObject productDetails = executeRestGet(String.format("%s/products/%s/", REST_ENDPOINT, productCode));
+        JsonObject tariffs = productDetails.getAsJsonObject("single_register_electricity_tariffs");
+        if (tariffs == null) {
+            throw new ConfigurationException("No single register tariffs found for product: " + productCode);
+        }
+
+        String regionKey = "_" + region;
+        if (!tariffs.has(regionKey) || tariffs.get(regionKey).isJsonNull()) {
+            throw new ConfigurationException("Region " + region + " not available for product " + productCode
+                    + " (expected key " + regionKey + ")");
+        }
+
+        JsonObject regionTariffs = tariffs.getAsJsonObject(regionKey);
+        JsonObject ddMonthly = regionTariffs.getAsJsonObject("direct_debit_monthly");
+        if (ddMonthly == null || !ddMonthly.has("code") || ddMonthly.get("code").isJsonNull()) {
+            throw new ConfigurationException(
+                    "No direct_debit_monthly tariff code found for region " + region + " on product " + productCode);
+        }
+
+        return Objects.requireNonNull(ddMonthly.get("code").getAsString());
+    }
+
+    private Instant parseInstant(JsonObject object, String field) {
+        if (!object.has(field) || object.get(field).isJsonNull()) {
+            return Instant.EPOCH;
+        }
+        try {
+            return Instant.parse(object.get(field).getAsString());
+        } catch (Exception e) {
+            return Instant.EPOCH;
+        }
     }
 
     /**
@@ -281,7 +523,7 @@ public class OctopusApiConnection {
         // Comprehensive GraphQL query to get all account information in one call
         // Includes balance, agreements with tariffs, standing charges, smart meter device IDs, and rate structures
         String query = String.format(
-                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { balance electricityAgreements(active: true) { meterPoint { mpan meters(includeInactive: false) { serialNumber smartImportElectricityMeter { deviceId manufacturer model firmwareVersion } smartExportElectricityMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validTo validFrom tariff { ... on TariffType { productCode standingCharge isExport displayName description __typename } ... on StandardTariff { unitRate preVatUnitRate } ... on DayNightTariff { dayRate preVatDayRate nightRate preVatNightRate } ... on ThreeRateTariff { nightRate offPeakRate preVatDayRate preVatNightRate preVatOffPeakRate dayRate } ... on HalfHourlyTariff { unitRates { preVatValue value rateType validFrom validTo } } ... on PrepayTariff { preVatUnitRate unitRate } } } } } gasAgreements(active: true) { meterPoint { mprn meters(includeInactive: false) { serialNumber consumptionUnits smartGasMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validFrom validTo tariff { standingCharge productCode displayName description unitRate preVatUnitRate } } } } } }\"}",
+                "{\"query\":\"query { account(accountNumber: \\\"%s\\\") { balance electricityAgreements(active: true) { meterPoint { mpan meters(includeInactive: false) { serialNumber smartImportElectricityMeter { deviceId manufacturer model firmwareVersion } smartExportElectricityMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validTo validFrom tariff { ... on TariffType { tariffCode productCode standingCharge isExport displayName description __typename } ... on StandardTariff { unitRate preVatUnitRate } ... on DayNightTariff { dayRate preVatDayRate nightRate preVatNightRate } ... on ThreeRateTariff { nightRate offPeakRate preVatDayRate preVatNightRate preVatOffPeakRate dayRate } ... on HalfHourlyTariff { unitRates { preVatValue value rateType validFrom validTo } } ... on PrepayTariff { preVatUnitRate unitRate } } } } } gasAgreements(active: true) { meterPoint { mprn meters(includeInactive: false) { serialNumber consumptionUnits smartGasMeter { deviceId manufacturer model firmwareVersion } } agreements(includeInactive: false) { validFrom validTo tariff { standingCharge productCode displayName description unitRate preVatUnitRate } } } } } }\"}",
                 accountNumber);
 
         JsonObject response = executeGraphQLAuthenticated(query, Objects.requireNonNull(authToken));

@@ -16,13 +16,26 @@
 				maximum 300 seconds. Set higher if experiencing rate limiting.</description>
 			<default>60</default>
 		</parameter>
-		<parameter name="apiKey" type="text" required="true">
+		<parameter name="apiKey" type="text" required="false">
 			<label>API Key</label>
-			<description>API Key for octopus API.</description>
+			<description>API Key for authenticated Octopus GraphQL account data (optional for public Agile forecast only).</description>
 		</parameter>
-		<parameter name="accountNumber" type="text" required="true">
+		<parameter name="accountNumber" type="text" required="false">
 			<label>Account Number</label>
-			<description>Your Octopus Energy account number.</description>
+			<description>Your Octopus Energy account number (optional for public Agile forecast only).</description>
+		</parameter>
+		<parameter name="agileProductCode" type="text" required="false">
+			<label>Agile Product Code</label>
+			<description>Optional Agile import product code (for example AGILE-24-10-01). Leave blank to auto-select latest
+				active Agile import product.</description>
+			<limitToOptions>true</limitToOptions>
+		</parameter>
+		<parameter name="agileRegion" type="text" required="false">
+			<label>Agile Region</label>
+			<description>Region code for the Agile tariff endpoint. Leave blank to auto-detect from your account tariff
+				(requires
+				API Key and Account Number).</description>
+			<limitToOptions>true</limitToOptions>
 		</parameter>
 	</config-description>
 

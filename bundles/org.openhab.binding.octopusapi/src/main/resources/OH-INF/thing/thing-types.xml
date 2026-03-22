@@ -27,6 +27,8 @@
 			<channel id="gasTariffName" typeId="gasTariffName"/>
 			<channel id="gasTariffDescription" typeId="gasTariffDescription"/>
 			<channel id="gasStandingCharge" typeId="gasStandingCharge"/>
+			<channel id="agileRates" typeId="agileRates"/>
+			<channel id="agileExRates" typeId="agileExRates"/>
 		</channels>
 
 		<config-description-ref uri="thing-type:octopusapi:settings"/>
@@ -133,5 +135,17 @@
 		<label>Gas Standing Charge</label>
 		<description>Daily gas standing charge in GBP</description>
 		<state pattern="£%.2f" readOnly="true"></state>
+	</channel-type>
+	<channel-type id="agileRates">
+		<item-type>Number</item-type>
+		<label>Agile Tariff Rates</label>
+		<description>Next 24h Agile tariff rates inc. VAT (GBP per kWh)</description>
+		<state pattern="%.4f"></state>
+	</channel-type>
+	<channel-type id="agileExRates">
+		<item-type>Number</item-type>
+		<label>Agile Tariff Rates Excl. VAT</label>
+		<description>Next 24h Agile tariff rates exc. VAT (GBP per kWh)</description>
+		<state pattern="%.4f"></state>
 	</channel-type>
 </thing:thing-descriptions>

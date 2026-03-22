@@ -28,4 +28,8 @@ public class OctopusApiBindingConstants {
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_OCTOPUSAPI = new ThingTypeUID(BINDING_ID, "octopus");
+
+    // Configuration parameter names
+    public static final String CONFIG_AGILE_PRODUCT_CODE = "agileProductCode";
+    public static final String CONFIG_AGILE_REGION = "agileRegion";
 }

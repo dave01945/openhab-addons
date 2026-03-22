@@ -15,6 +15,9 @@ package org.openhab.binding.octopusapi.internal;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.concurrent.ScheduledFuture;
@@ -63,6 +66,10 @@ public class OctopusApiHandler extends BaseThingHandler {
 
     private boolean hasExportMeter = false;
 
+    private boolean accountConfigured = false;
+
+    private String accountRegion = "";
+
     private String electricityDeviceId = "";
 
     private String gasDeviceId = "";
@@ -78,6 +85,8 @@ public class OctopusApiHandler extends BaseThingHandler {
     private final HttpClient httpClient;
 
     private @NonNullByDefault({}) ScheduledFuture<?> scheduledFuture;
+
+    private @NonNullByDefault({}) ScheduledFuture<?> agileRatesFuture;
 
     private @NonNullByDefault({}) ScheduledFuture<?> livePollFuture;
 
@@ -101,19 +110,35 @@ public class OctopusApiHandler extends BaseThingHandler {
 
         this.apiKey = config.apiKey;
         this.accountNumber = config.accountNumber;
+        this.accountConfigured = !apiKey.trim().isEmpty() && !accountNumber.trim().isEmpty();
 
         connection = new OctopusApiConnection(this, httpClient);
 
-        // Query comprehensive account details to get MPANs, meter serials, tariffs, balance, and device ID
-        try {
-            queryAccountDetails();
-        } catch (Exception e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Failed to query account details: " + e.getMessage());
-            return;
+        if (accountConfigured) {
+            // Query comprehensive account details to get account-scoped data and device IDs
+            try {
+                queryAccountDetails();
+            } catch (Exception e) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "Failed to query account details: " + e.getMessage());
+            }
+        } else {
+            logger.debug(
+                    "API key/account number not configured: account-scoped channels disabled, using public Agile rates");
         }
 
         scheduledFuture = scheduler.scheduleWithFixedDelay(this::pollTask, 0, config.refreshInterval, TimeUnit.HOURS);
+
+        // Schedule a daily Agile rates refresh at 16:10 UTC (shortly after Octopus publishes next-day prices)
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime next1610 = now.with(LocalTime.of(16, 10));
+        if (!now.isBefore(next1610)) {
+            next1610 = next1610.plusDays(1);
+        }
+        long initialDelaySeconds = now.until(next1610, ChronoUnit.SECONDS);
+        agileRatesFuture = scheduler.scheduleWithFixedDelay(this::updateForecastRates, initialDelaySeconds,
+                24 * 60 * 60, TimeUnit.SECONDS);
+        logger.debug("Scheduled daily Agile rates refresh at 16:10 UTC, first run in {} seconds", initialDelaySeconds);
 
         // Start live polling if electricityDeviceId was retrieved (every liveRefreshInterval seconds)
         if (!electricityDeviceId.isEmpty()) {
@@ -128,6 +153,10 @@ public class OctopusApiHandler extends BaseThingHandler {
         ScheduledFuture<?> localScheduledFuture = scheduledFuture;
         if (localScheduledFuture != null) {
             localScheduledFuture.cancel(true);
+        }
+        ScheduledFuture<?> localAgileRatesFuture = agileRatesFuture;
+        if (localAgileRatesFuture != null) {
+            localAgileRatesFuture.cancel(true);
         }
         ScheduledFuture<?> localLivePollFuture = livePollFuture;
         if (localLivePollFuture != null) {
@@ -483,28 +512,94 @@ public class OctopusApiHandler extends BaseThingHandler {
         updateStatus(ThingStatus.ONLINE);
     }
 
+    private TimeSeries[] createForecastRatesTimeSeries(String data) {
+        TimeSeries[] rates = new TimeSeries[2];
+        rates[0] = new TimeSeries(Policy.REPLACE);
+        rates[1] = new TimeSeries(Policy.REPLACE);
+
+        try {
+            JsonObject restResponse = JsonParser.parseString(data).getAsJsonObject();
+            JsonArray results = restResponse.getAsJsonArray("results");
+            if (results == null) {
+                return rates;
+            }
+
+            for (JsonElement resultElement : results) {
+                JsonObject result = resultElement.getAsJsonObject();
+                if (!result.has("valid_from") || result.get("valid_from").isJsonNull()) {
+                    continue;
+                }
+                Instant timestamp = Instant.parse(result.get("valid_from").getAsString());
+
+                double valueIncVatPence = result.get("value_inc_vat").getAsDouble();
+                BigDecimal valueIncVatPounds = new BigDecimal(valueIncVatPence).divide(new BigDecimal("100"), 4,
+                        RoundingMode.HALF_UP);
+                rates[0].add(timestamp, new DecimalType(valueIncVatPounds));
+
+                if (result.has("value_exc_vat") && !result.get("value_exc_vat").isJsonNull()) {
+                    double valueExcVatPence = result.get("value_exc_vat").getAsDouble();
+                    BigDecimal valueExcVatPounds = new BigDecimal(valueExcVatPence).divide(new BigDecimal("100"), 4,
+                            RoundingMode.HALF_UP);
+                    rates[1].add(timestamp, new DecimalType(valueExcVatPounds));
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse forecast rates data: {}", e.getMessage(), e);
+        }
+
+        return rates;
+    }
+
+    private void updateForecastRates() {
+        ChannelUID agileRatesUID = new ChannelUID(thing.getUID(), "agileRates");
+        ChannelUID agileExRatesUID = new ChannelUID(thing.getUID(), "agileExRates");
+
+        try {
+            Instant now = Instant.now();
+            Instant endAt = now.plus(24, ChronoUnit.HOURS);
+            String effectiveRegion = config.agileRegion.isBlank() ? (accountRegion.isBlank() ? "A" : accountRegion)
+                    : config.agileRegion;
+            String responseData = connection.getPublicAgileRates(config.agileProductCode, effectiveRegion,
+                    Objects.requireNonNull(now), Objects.requireNonNull(endAt));
+            TimeSeries[] forecastRates = createForecastRatesTimeSeries(responseData);
+
+            logger.debug("Sending agile inc-VAT forecast to channel {} with {} entries", agileRatesUID,
+                    forecastRates[0].size());
+            logger.debug("Sending agile exc-VAT forecast to channel {} with {} entries", agileExRatesUID,
+                    forecastRates[1].size());
+            sendTimeSeries(agileRatesUID, Objects.requireNonNull(forecastRates[0]));
+            sendTimeSeries(agileExRatesUID, Objects.requireNonNull(forecastRates[1]));
+        } catch (Exception e) {
+            logger.debug("Failed to fetch agile forecast rates: {}", e.getMessage());
+        }
+    }
+
     private void pollTask() {
         if (thing.getStatus() == ThingStatus.REMOVING || thing.getStatus() == ThingStatus.REMOVED) {
             return;
         }
 
-        try {
-            // Refresh account details to update balance, tariff info, and cached tariff data
-            queryAccountDetails();
-        } catch (Exception e) {
-            logger.debug("Failed to refresh account details: {}", e.getMessage());
-            // Continue with other updates even if this fails
+        if (accountConfigured) {
+            try {
+                // Refresh account details to update balance, tariff info, and cached tariff data
+                queryAccountDetails();
+            } catch (Exception e) {
+                logger.debug("Failed to refresh account details: {}", e.getMessage());
+                // Continue with other updates even if this fails
+            }
+
+            updateConsumption(false);
+            if (hasExportMeter) {
+                updateConsumption(true);
+            }
+            updateCurrentTariffRates();
+            if (!gasDeviceId.isEmpty()) {
+                updateGasConsumption();
+                updateGasTariffRates();
+            }
         }
 
-        updateConsumption(false);
-        if (hasExportMeter) {
-            updateConsumption(true);
-        }
-        updateCurrentTariffRates();
-        if (!gasDeviceId.isEmpty()) {
-            updateGasConsumption();
-            updateGasTariffRates();
-        }
+        updateForecastRates();
     }
 
     /**
@@ -619,6 +714,10 @@ public class OctopusApiHandler extends BaseThingHandler {
                 // Store electricity tariff data for rate updates
                 if (tariff != null) {
                     electricityTariffData = tariff;
+                    if (tariff.has("tariffCode") && !tariff.get("tariffCode").isJsonNull()) {
+                        accountRegion = extractRegionFromTariffCode(tariff.get("tariffCode").getAsString());
+                        logger.debug("Detected account region {} from tariff code", accountRegion);
+                    }
                 }
 
                 // Update electricity tariff channels for import meter
@@ -639,6 +738,25 @@ public class OctopusApiHandler extends BaseThingHandler {
                 }
             }
         }
+    }
+
+    /**
+     * Extract the GSP region letter from an Octopus tariff code.
+     * Tariff codes follow the format E-1R-PRODUCT-CODE-REGION (e.g. E-1R-AGILE-24-10-01-A).
+     * The last hyphen-separated segment is the single-letter region code.
+     */
+    private static String extractRegionFromTariffCode(String tariffCode) {
+        if (tariffCode == null || tariffCode.isBlank()) {
+            return "";
+        }
+        int lastHyphen = tariffCode.lastIndexOf('-');
+        if (lastHyphen >= 0 && lastHyphen < tariffCode.length() - 1) {
+            String region = tariffCode.substring(lastHyphen + 1).trim().toUpperCase();
+            if (region.length() == 1 && region.charAt(0) >= 'A' && region.charAt(0) <= 'P') {
+                return region;
+            }
+        }
+        return "";
     }
 
     private void processGasAgreements(JsonArray gasAgreements) {

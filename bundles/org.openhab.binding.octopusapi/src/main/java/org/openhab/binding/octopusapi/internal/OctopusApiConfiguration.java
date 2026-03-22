@@ -26,4 +26,6 @@ public class OctopusApiConfiguration {
     public int liveRefreshInterval = 30;
     public String apiKey = "";
     public String accountNumber = "";
+    public String agileProductCode = "";
+    public String agileRegion = "";
 }
