@@ -556,11 +556,13 @@ public class OctopusApiHandler extends BaseThingHandler {
 
         try {
             Instant now = Instant.now();
+            // Start 30 minutes before now to ensure the current half-hour slot is always included
+            Instant periodFrom = now.minus(30, ChronoUnit.MINUTES);
             Instant endAt = now.plus(24, ChronoUnit.HOURS);
             String effectiveRegion = config.agileRegion.isBlank() ? (accountRegion.isBlank() ? "A" : accountRegion)
                     : config.agileRegion;
             String responseData = connection.getPublicAgileRates(config.agileProductCode, effectiveRegion,
-                    Objects.requireNonNull(now), Objects.requireNonNull(endAt));
+                    Objects.requireNonNull(periodFrom), Objects.requireNonNull(endAt));
             TimeSeries[] forecastRates = createForecastRatesTimeSeries(responseData);
 
             logger.debug("Sending agile inc-VAT forecast to channel {} with {} entries", agileRatesUID,
@@ -569,6 +571,12 @@ public class OctopusApiHandler extends BaseThingHandler {
                     forecastRates[1].size());
             sendTimeSeries(agileRatesUID, Objects.requireNonNull(forecastRates[0]));
             sendTimeSeries(agileExRatesUID, Objects.requireNonNull(forecastRates[1]));
+
+            // Update current state with the rate for the current half-hour slot
+            forecastRates[0].getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
+                    .ifPresent(entry -> updateState(agileRatesUID, entry.state()));
+            forecastRates[1].getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
+                    .ifPresent(entry -> updateState(agileExRatesUID, entry.state()));
         } catch (Exception e) {
             logger.debug("Failed to fetch agile forecast rates: {}", e.getMessage());
         }
