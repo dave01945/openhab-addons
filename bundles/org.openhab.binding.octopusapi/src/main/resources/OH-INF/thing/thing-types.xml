@@ -9,30 +9,75 @@
 		<label>Octopus API Binding Thing</label>
 		<description>Octopus API Binding for consumption and agile rates</description>
 
+		<channel-groups>
+			<channel-group id="electricity" typeId="electricityGroup"/>
+			<channel-group id="gas" typeId="gasGroup"/>
+			<channel-group id="live" typeId="liveGroup"/>
+			<channel-group id="agile" typeId="agileGroup"/>
+			<channel-group id="account" typeId="accountGroup"/>
+		</channel-groups>
+
+		<config-description-ref uri="thing-type:octopusapi:settings"/>
+	</thing-type>
+
+	<!-- Channel Group Types -->
+
+	<channel-group-type id="electricityGroup">
+		<label>Electricity</label>
+		<description>Electricity import and export consumption and tariff channels</description>
 		<channels>
 			<channel id="consumption" typeId="consumption"/>
 			<channel id="export" typeId="export"/>
 			<channel id="currentRates" typeId="currentRates"/>
-			<channel id="currentExRates" typeId="currentExRates"/>
-			<channel id="gasConsumption" typeId="gasConsumption"/>
-			<channel id="gasRates" typeId="gasRates"/>
-			<channel id="gasExRates" typeId="gasExRates"/>
-			<channel id="liveDemand" typeId="liveDemand"/>
-			<channel id="liveMeterReading" typeId="liveMeterReading"/>
-			<channel id="liveExportReading" typeId="liveExportReading"/>
-			<channel id="accountBalance" typeId="accountBalance"/>
+			<channel id="currentExportRates" typeId="currentExportRates"/>
 			<channel id="electricityTariffName" typeId="electricityTariffName"/>
 			<channel id="electricityTariffDescription" typeId="electricityTariffDescription"/>
 			<channel id="electricityStandingCharge" typeId="electricityStandingCharge"/>
+			<channel id="exportTariffName" typeId="exportTariffName"/>
+			<channel id="exportTariffDescription" typeId="exportTariffDescription"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="gasGroup">
+		<label>Gas</label>
+		<description>Gas consumption and tariff channels</description>
+		<channels>
+			<channel id="gasConsumption" typeId="gasConsumption"/>
+			<channel id="gasRates" typeId="gasRates"/>
 			<channel id="gasTariffName" typeId="gasTariffName"/>
 			<channel id="gasTariffDescription" typeId="gasTariffDescription"/>
 			<channel id="gasStandingCharge" typeId="gasStandingCharge"/>
-			<channel id="agileRates" typeId="agileRates"/>
-			<channel id="agileExRates" typeId="agileExRates"/>
 		</channels>
+	</channel-group-type>
 
-		<config-description-ref uri="thing-type:octopusapi:settings"/>
-	</thing-type>
+	<channel-group-type id="liveGroup">
+		<label>Live Data</label>
+		<description>Real-time smart meter data (requires Octopus Home Mini)</description>
+		<channels>
+			<channel id="liveDemand" typeId="liveDemand"/>
+			<channel id="liveMeterReading" typeId="liveMeterReading"/>
+			<channel id="liveExportReading" typeId="liveExportReading"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="agileGroup">
+		<label>Agile Rates</label>
+		<description>Agile tariff forecast rates</description>
+		<channels>
+			<channel id="agileRates" typeId="agileRates"/>
+			<channel id="agileExportRates" typeId="agileExportRates"/>
+		</channels>
+	</channel-group-type>
+
+	<channel-group-type id="accountGroup">
+		<label>Account</label>
+		<description>Account information</description>
+		<channels>
+			<channel id="accountBalance" typeId="accountBalance"/>
+		</channels>
+	</channel-group-type>
+
+	<!-- Channel Types -->
 
 	<channel-type id="consumption">
 		<item-type>Number:Energy</item-type>
@@ -48,15 +93,45 @@
 	</channel-type>
 	<channel-type id="currentRates">
 		<item-type>Number</item-type>
-		<label>Current Tariff Rates</label>
-		<description>Account tariff rates from GraphQL API (GBP per kWh)</description>
-		<state pattern="%.2f"></state>
+		<label>Current Import Tariff Rates</label>
+		<description>Account import tariff rates inc. VAT (GBP per kWh). Forecast next 24h for time-varying tariffs.</description>
+		<state pattern="%.4f"></state>
 	</channel-type>
-	<channel-type id="currentExRates">
+	<channel-type id="currentExportRates">
 		<item-type>Number</item-type>
-		<label>Current Tariff Rates Excluding VAT</label>
-		<description>Account tariff rates excluding VAT from GraphQL API (GBP per kWh)</description>
-		<state pattern="%.2f"></state>
+		<label>Current Export Tariff Rates</label>
+		<description>Account export tariff rates inc. VAT (GBP per kWh). Forecast next 24h for time-varying tariffs.</description>
+		<state pattern="%.4f"></state>
+	</channel-type>
+	<channel-type id="electricityTariffName">
+		<item-type>String</item-type>
+		<label>Electricity Import Tariff Name</label>
+		<description>Current electricity import tariff display name</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="electricityTariffDescription">
+		<item-type>String</item-type>
+		<label>Electricity Import Tariff Description</label>
+		<description>Current electricity import tariff description</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="electricityStandingCharge">
+		<item-type>Number</item-type>
+		<label>Electricity Standing Charge</label>
+		<description>Daily electricity standing charge in GBP</description>
+		<state pattern="£%.2f" readOnly="true"></state>
+	</channel-type>
+	<channel-type id="exportTariffName">
+		<item-type>String</item-type>
+		<label>Electricity Export Tariff Name</label>
+		<description>Current electricity export tariff display name</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="exportTariffDescription">
+		<item-type>String</item-type>
+		<label>Electricity Export Tariff Description</label>
+		<description>Current electricity export tariff description</description>
+		<state readOnly="true"></state>
 	</channel-type>
 	<channel-type id="gasConsumption">
 		<item-type>Number:Energy</item-type>
@@ -67,14 +142,26 @@
 	<channel-type id="gasRates">
 		<item-type>Number</item-type>
 		<label>Gas Tariff Rates</label>
-		<description>Gas tariff rates from GraphQL API (GBP per kWh)</description>
-		<state pattern="%.2f"></state>
+		<description>Gas tariff rates inc. VAT (GBP per kWh)</description>
+		<state pattern="%.4f"></state>
 	</channel-type>
-	<channel-type id="gasExRates">
+	<channel-type id="gasTariffName">
+		<item-type>String</item-type>
+		<label>Gas Tariff Name</label>
+		<description>Current gas tariff display name</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="gasTariffDescription">
+		<item-type>String</item-type>
+		<label>Gas Tariff Description</label>
+		<description>Current gas tariff description</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="gasStandingCharge">
 		<item-type>Number</item-type>
-		<label>Gas Tariff Rates Excluding VAT</label>
-		<description>Gas tariff rates excluding VAT from GraphQL API (GBP per kWh)</description>
-		<state pattern="%.2f"></state>
+		<label>Gas Standing Charge</label>
+		<description>Daily gas standing charge in GBP</description>
+		<state pattern="£%.2f" readOnly="true"></state>
 	</channel-type>
 	<channel-type id="liveDemand">
 		<item-type>Number:Power</item-type>
@@ -100,52 +187,17 @@
 		<description>Current account balance in GBP (negative = credit)</description>
 		<state pattern="£%.2f" readOnly="true"></state>
 	</channel-type>
-	<channel-type id="electricityTariffName">
-		<item-type>String</item-type>
-		<label>Electricity Tariff Name</label>
-		<description>Current electricity tariff display name</description>
-		<state readOnly="true"></state>
-	</channel-type>
-	<channel-type id="electricityTariffDescription">
-		<item-type>String</item-type>
-		<label>Electricity Tariff Description</label>
-		<description>Current electricity tariff description</description>
-		<state readOnly="true"></state>
-	</channel-type>
-	<channel-type id="electricityStandingCharge">
-		<item-type>Number</item-type>
-		<label>Electricity Standing Charge</label>
-		<description>Daily electricity standing charge in GBP</description>
-		<state pattern="£%.2f" readOnly="true"></state>
-	</channel-type>
-	<channel-type id="gasTariffName">
-		<item-type>String</item-type>
-		<label>Gas Tariff Name</label>
-		<description>Current gas tariff display name</description>
-		<state readOnly="true"></state>
-	</channel-type>
-	<channel-type id="gasTariffDescription">
-		<item-type>String</item-type>
-		<label>Gas Tariff Description</label>
-		<description>Current gas tariff description</description>
-		<state readOnly="true"></state>
-	</channel-type>
-	<channel-type id="gasStandingCharge">
-		<item-type>Number</item-type>
-		<label>Gas Standing Charge</label>
-		<description>Daily gas standing charge in GBP</description>
-		<state pattern="£%.2f" readOnly="true"></state>
-	</channel-type>
 	<channel-type id="agileRates">
 		<item-type>Number</item-type>
-		<label>Agile Tariff Rates</label>
-		<description>Next 24h Agile tariff rates inc. VAT (GBP per kWh)</description>
+		<label>Agile Import Rates</label>
+		<description>Next 24h Agile import tariff rates inc. VAT (GBP per kWh)</description>
 		<state pattern="%.4f"></state>
 	</channel-type>
-	<channel-type id="agileExRates">
+	<channel-type id="agileExportRates">
 		<item-type>Number</item-type>
-		<label>Agile Tariff Rates Excl. VAT</label>
-		<description>Next 24h Agile tariff rates exc. VAT (GBP per kWh)</description>
+		<label>Agile Export Rates</label>
+		<description>Next 24h Agile OUTGOING (export) tariff rates inc. VAT (GBP per kWh)</description>
 		<state pattern="%.4f"></state>
 	</channel-type>
+
 </thing:thing-descriptions>

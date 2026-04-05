@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.octopusapi.internal;
 
+import static org.openhab.binding.octopusapi.internal.OctopusApiBindingConstants.CONFIG_AGILE_EXPORT_PRODUCT_CODE;
 import static org.openhab.binding.octopusapi.internal.OctopusApiBindingConstants.CONFIG_AGILE_PRODUCT_CODE;
 import static org.openhab.binding.octopusapi.internal.OctopusApiBindingConstants.CONFIG_AGILE_REGION;
 
@@ -83,6 +84,19 @@ public class OctopusApiConfigOptionProvider implements ConfigOptionProvider {
             } catch (Exception e) {
                 logger.debug("Failed to load dynamic Agile product options: {}", e.getMessage());
                 return List.of(new ParameterOption("", "Auto (latest active Agile import product)"));
+            }
+        }
+
+        if (CONFIG_AGILE_EXPORT_PRODUCT_CODE.equals(param)) {
+            try {
+                Collection<String> productCodes = connection.getPublicAgileExportProductCodes();
+                List<ParameterOption> options = new ArrayList<>();
+                options.add(new ParameterOption("", "Auto (latest active Agile OUTGOING product)"));
+                productCodes.forEach(productCode -> options.add(new ParameterOption(productCode, productCode)));
+                return options;
+            } catch (Exception e) {
+                logger.debug("Failed to load dynamic Agile export product options: {}", e.getMessage());
+                return List.of(new ParameterOption("", "Auto (latest active Agile OUTGOING product)"));
             }
         }
 

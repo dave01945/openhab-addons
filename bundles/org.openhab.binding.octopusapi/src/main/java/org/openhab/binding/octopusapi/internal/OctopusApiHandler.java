@@ -19,7 +19,9 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -36,6 +38,7 @@ import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.TimeSeries;
@@ -74,7 +77,13 @@ public class OctopusApiHandler extends BaseThingHandler {
 
     private String gasDeviceId = "";
 
+    private String importMpan = "";
+
+    private String exportMpan = "";
+
     private @NonNullByDefault({}) JsonObject electricityTariffData;
+
+    private @NonNullByDefault({}) JsonObject exportTariffData;
 
     private @NonNullByDefault({}) JsonObject gasTariffData;
 
@@ -136,7 +145,7 @@ public class OctopusApiHandler extends BaseThingHandler {
             next1610 = next1610.plusDays(1);
         }
         long initialDelaySeconds = now.until(next1610, ChronoUnit.SECONDS);
-        agileRatesFuture = scheduler.scheduleWithFixedDelay(this::updateForecastRates, initialDelaySeconds,
+        agileRatesFuture = scheduler.scheduleWithFixedDelay(this::updateAllDailyRates, initialDelaySeconds,
                 24 * 60 * 60, TimeUnit.SECONDS);
         logger.debug("Scheduled daily Agile rates refresh at 16:10 UTC, first run in {} seconds", initialDelaySeconds);
 
@@ -162,6 +171,11 @@ public class OctopusApiHandler extends BaseThingHandler {
         if (localLivePollFuture != null) {
             localLivePollFuture.cancel(true);
         }
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Set.of(OctopusApiActions.class);
     }
 
     private TimeSeries createConsumptionTimeSeries(String consumption) {
@@ -306,7 +320,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         // Query 7 days of data using multiple API calls (API limit is 100 records per query)
         // 7 days of half-hourly data = 336 records, so we need multiple queries
         Instant now = Instant.now();
-        String id = (export) ? "export" : "consumption";
+        String id = (export) ? "electricity#export" : "electricity#consumption";
         ChannelUID consumptionUID = new ChannelUID(thing.getUID(), id);
 
         try {
@@ -357,10 +371,8 @@ public class OctopusApiHandler extends BaseThingHandler {
      * Create TimeSeries from tariff data stored during initialization.
      * Handles different tariff types: HalfHourly, Standard, DayNight, ThreeRate, Prepay.
      */
-    private TimeSeries[] createTimeSeriesFromTariffData(@Nullable JsonObject tariffData) {
-        TimeSeries[] rates = new TimeSeries[2];
-        rates[0] = new TimeSeries(Policy.REPLACE);
-        rates[1] = new TimeSeries(Policy.REPLACE);
+    private TimeSeries createTimeSeriesFromTariffData(@Nullable JsonObject tariffData) {
+        TimeSeries rates = new TimeSeries(Policy.REPLACE);
 
         if (tariffData == null) {
             return rates;
@@ -379,18 +391,10 @@ public class OctopusApiHandler extends BaseThingHandler {
                     if (rate.has("validFrom") && !rate.get("validFrom").isJsonNull()) {
                         Instant timestamp = Instant.parse(rate.get("validFrom").getAsString());
 
-                        // Get value (inc VAT) in pence, convert to pounds
                         double valueIncVatPence = rate.get("value").getAsDouble();
                         BigDecimal valueIncVatPounds = new BigDecimal(valueIncVatPence).divide(new BigDecimal("100"), 4,
                                 RoundingMode.HALF_UP);
-
-                        // Get preVatValue in pence, convert to pounds
-                        double valueExcVatPence = rate.get("preVatValue").getAsDouble();
-                        BigDecimal valueExcVatPounds = new BigDecimal(valueExcVatPence).divide(new BigDecimal("100"), 4,
-                                RoundingMode.HALF_UP);
-
-                        rates[0].add(timestamp, new DecimalType(valueIncVatPounds));
-                        rates[1].add(timestamp, new DecimalType(valueExcVatPounds));
+                        rates.add(timestamp, new DecimalType(valueIncVatPounds));
                     }
                 }
             } else {
@@ -402,29 +406,16 @@ public class OctopusApiHandler extends BaseThingHandler {
                 if (tariffData.has("unitRate") && !tariffData.get("unitRate").isJsonNull()) {
                     // StandardTariff or PrepayTariff
                     double unitRatePence = tariffData.get("unitRate").getAsDouble();
-                    double preVatUnitRatePence = tariffData.get("preVatUnitRate").getAsDouble();
-
                     BigDecimal unitRatePounds = new BigDecimal(unitRatePence).divide(new BigDecimal("100"), 4,
                             RoundingMode.HALF_UP);
-                    BigDecimal preVatUnitRatePounds = new BigDecimal(preVatUnitRatePence).divide(new BigDecimal("100"),
-                            4, RoundingMode.HALF_UP);
-
-                    // Add a single point for current time
-                    rates[0].add(now, new DecimalType(unitRatePounds));
-                    rates[1].add(now, new DecimalType(preVatUnitRatePounds));
+                    rates.add(now, new DecimalType(unitRatePounds));
                 } else if (tariffData.has("dayRate") && !tariffData.get("dayRate").isJsonNull()) {
                     // DayNightTariff or ThreeRateTariff - for now, just use day rate
                     // A full implementation would need to determine current time period
                     double dayRatePence = tariffData.get("dayRate").getAsDouble();
-                    double preVatDayRatePence = tariffData.get("preVatDayRate").getAsDouble();
-
                     BigDecimal dayRatePounds = new BigDecimal(dayRatePence).divide(new BigDecimal("100"), 4,
                             RoundingMode.HALF_UP);
-                    BigDecimal preVatDayRatePounds = new BigDecimal(preVatDayRatePence).divide(new BigDecimal("100"), 4,
-                            RoundingMode.HALF_UP);
-
-                    rates[0].add(now, new DecimalType(dayRatePounds));
-                    rates[1].add(now, new DecimalType(preVatDayRatePounds));
+                    rates.add(now, new DecimalType(dayRatePounds));
 
                     logger.debug("Using day rate for time-varying tariff. Full time-of-day logic not implemented.");
                 }
@@ -440,7 +431,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         Instant now = Instant.now();
         Instant endDate = now;
         Instant startDate = now.minus(3, ChronoUnit.DAYS);
-        ChannelUID gasConsumptionUID = new ChannelUID(thing.getUID(), "gasConsumption");
+        ChannelUID gasConsumptionUID = new ChannelUID(thing.getUID(), "gas#gasConsumption");
 
         try {
             String responseData = connection.getGasConsumptionData(apiKey, accountNumber, gasDeviceId,
@@ -458,64 +449,115 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     private void updateGasTariffRates() {
-        ChannelUID gasRatesUID = new ChannelUID(thing.getUID(), "gasRates");
-        ChannelUID gasExRatesUID = new ChannelUID(thing.getUID(), "gasExRates");
+        ChannelUID gasRatesUID = new ChannelUID(thing.getUID(), "gas#gasRates");
 
         if (gasTariffData == null) {
             logger.debug("No gas tariff data available");
             return;
         }
 
-        TimeSeries[] gasRates = createTimeSeriesFromTariffData(gasTariffData);
+        TimeSeries gasRates = createTimeSeriesFromTariffData(gasTariffData);
 
-        sendTimeSeries(gasRatesUID, Objects.requireNonNull(gasRates[0]));
-        sendTimeSeries(gasExRatesUID, Objects.requireNonNull(gasRates[1]));
+        sendTimeSeries(gasRatesUID, Objects.requireNonNull(gasRates));
 
-        if (gasRates[0].size() > 0) {
-            gasRates[0].getStates().reduce((first, second) -> second)
+        if (gasRates.size() > 0) {
+            gasRates.getStates().reduce((first, second) -> second)
                     .ifPresent(entry -> updateState(gasRatesUID, entry.state()));
-        }
-        if (gasRates[1].size() > 0) {
-            gasRates[1].getStates().reduce((first, second) -> second)
-                    .ifPresent(entry -> updateState(gasExRatesUID, entry.state()));
         }
     }
 
     private void updateCurrentTariffRates() {
-        ChannelUID currentRatesUID = new ChannelUID(thing.getUID(), "currentRates");
-        ChannelUID currentExRatesUID = new ChannelUID(thing.getUID(), "currentExRates");
+        ChannelUID currentRatesUID = new ChannelUID(thing.getUID(), "electricity#currentRates");
 
-        if (electricityTariffData == null) {
-            logger.debug("No electricity tariff data available");
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "No tariff data available from initialization");
+        if (importMpan.isEmpty()) {
+            logger.debug("No import MPAN available for current tariff rates query");
             return;
         }
 
-        TimeSeries[] currentRates = createTimeSeriesFromTariffData(electricityTariffData);
+        try {
+            Instant now = Instant.now();
+            Instant periodFrom = now.minus(30, ChronoUnit.MINUTES);
+            Instant endAt = now.plus(24, ChronoUnit.HOURS);
+            String responseData = connection.getTariffRates(apiKey, accountNumber, importMpan,
+                    Objects.requireNonNull(periodFrom), Objects.requireNonNull(endAt));
+            TimeSeries currentRates = createTimeSeriesFromApplicableRates(responseData);
 
-        logger.debug("Sending inc-VAT rates to channel {} with {} entries", currentRatesUID, currentRates[0].size());
-        logger.debug("Sending exc-VAT rates to channel {} with {} entries", currentExRatesUID, currentRates[1].size());
-        sendTimeSeries(currentRatesUID, Objects.requireNonNull(currentRates[0]));
-        sendTimeSeries(currentExRatesUID, Objects.requireNonNull(currentRates[1]));
+            logger.debug("Sending import rates to channel {} with {} entries", currentRatesUID, currentRates.size());
+            sendTimeSeries(currentRatesUID, Objects.requireNonNull(currentRates));
 
-        // Update current state with the most recent value from each TimeSeries
-        if (currentRates[0].size() > 0) {
-            currentRates[0].getStates().reduce((first, second) -> second)
+            // Update current state with the rate for the current slot (last entry <= now)
+            currentRates.getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
                     .ifPresent(entry -> updateState(currentRatesUID, entry.state()));
-        }
-        if (currentRates[1].size() > 0) {
-            currentRates[1].getStates().reduce((first, second) -> second)
-                    .ifPresent(entry -> updateState(currentExRatesUID, entry.state()));
-        }
 
-        updateStatus(ThingStatus.ONLINE);
+            updateStatus(ThingStatus.ONLINE);
+        } catch (Exception e) {
+            logger.debug("Failed to update current import tariff rates: {}", e.getMessage());
+        }
     }
 
-    private TimeSeries[] createForecastRatesTimeSeries(String data) {
-        TimeSeries[] rates = new TimeSeries[2];
-        rates[0] = new TimeSeries(Policy.REPLACE);
-        rates[1] = new TimeSeries(Policy.REPLACE);
+    private void updateCurrentExportTariffRates() {
+        ChannelUID currentExportRatesUID = new ChannelUID(thing.getUID(), "electricity#currentExportRates");
+
+        if (exportMpan.isEmpty()) {
+            logger.debug("No export MPAN available — skipping export tariff rates");
+            return;
+        }
+
+        try {
+            Instant now = Instant.now();
+            Instant periodFrom = now.minus(30, ChronoUnit.MINUTES);
+            Instant endAt = now.plus(24, ChronoUnit.HOURS);
+            String responseData = connection.getTariffRates(apiKey, accountNumber, exportMpan,
+                    Objects.requireNonNull(periodFrom), Objects.requireNonNull(endAt));
+            TimeSeries exportRates = createTimeSeriesFromApplicableRates(responseData);
+
+            logger.debug("Sending export rates to channel {} with {} entries", currentExportRatesUID,
+                    exportRates.size());
+            sendTimeSeries(currentExportRatesUID, Objects.requireNonNull(exportRates));
+
+            exportRates.getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
+                    .ifPresent(entry -> updateState(currentExportRatesUID, entry.state()));
+        } catch (Exception e) {
+            logger.debug("Failed to update current export tariff rates: {}", e.getMessage());
+        }
+    }
+
+    private TimeSeries createTimeSeriesFromApplicableRates(String data) {
+        TimeSeries rates = new TimeSeries(Policy.REPLACE);
+
+        try {
+            JsonObject graphqlResponse = JsonParser.parseString(data).getAsJsonObject();
+            JsonObject responseData = graphqlResponse.getAsJsonObject("data");
+            if (responseData == null || !responseData.has("applicableRates")) {
+                return rates;
+            }
+            JsonObject applicableRates = responseData.getAsJsonObject("applicableRates");
+            JsonArray edges = applicableRates.getAsJsonArray("edges");
+            if (edges == null) {
+                return rates;
+            }
+
+            for (JsonElement edgeElement : edges) {
+                JsonObject node = edgeElement.getAsJsonObject().getAsJsonObject("node");
+                if (node == null || !node.has("validFrom") || node.get("validFrom").isJsonNull()) {
+                    continue;
+                }
+                Instant timestamp = Instant.parse(node.get("validFrom").getAsString());
+
+                double valueIncVatPence = node.get("value").getAsDouble();
+                BigDecimal valueIncVatPounds = new BigDecimal(valueIncVatPence).divide(new BigDecimal("100"), 4,
+                        RoundingMode.HALF_UP);
+                rates.add(timestamp, new DecimalType(valueIncVatPounds));
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse applicableRates data: {}", e.getMessage(), e);
+        }
+
+        return rates;
+    }
+
+    private TimeSeries createForecastRatesTimeSeries(String data) {
+        TimeSeries rates = new TimeSeries(Policy.REPLACE);
 
         try {
             JsonObject restResponse = JsonParser.parseString(data).getAsJsonObject();
@@ -534,14 +576,7 @@ public class OctopusApiHandler extends BaseThingHandler {
                 double valueIncVatPence = result.get("value_inc_vat").getAsDouble();
                 BigDecimal valueIncVatPounds = new BigDecimal(valueIncVatPence).divide(new BigDecimal("100"), 4,
                         RoundingMode.HALF_UP);
-                rates[0].add(timestamp, new DecimalType(valueIncVatPounds));
-
-                if (result.has("value_exc_vat") && !result.get("value_exc_vat").isJsonNull()) {
-                    double valueExcVatPence = result.get("value_exc_vat").getAsDouble();
-                    BigDecimal valueExcVatPounds = new BigDecimal(valueExcVatPence).divide(new BigDecimal("100"), 4,
-                            RoundingMode.HALF_UP);
-                    rates[1].add(timestamp, new DecimalType(valueExcVatPounds));
-                }
+                rates.add(timestamp, new DecimalType(valueIncVatPounds));
             }
         } catch (Exception e) {
             logger.warn("Failed to parse forecast rates data: {}", e.getMessage(), e);
@@ -551,8 +586,7 @@ public class OctopusApiHandler extends BaseThingHandler {
     }
 
     private void updateForecastRates() {
-        ChannelUID agileRatesUID = new ChannelUID(thing.getUID(), "agileRates");
-        ChannelUID agileExRatesUID = new ChannelUID(thing.getUID(), "agileExRates");
+        ChannelUID agileRatesUID = new ChannelUID(thing.getUID(), "agile#agileRates");
 
         try {
             Instant now = Instant.now();
@@ -563,22 +597,70 @@ public class OctopusApiHandler extends BaseThingHandler {
                     : config.agileRegion;
             String responseData = connection.getPublicAgileRates(config.agileProductCode, effectiveRegion,
                     Objects.requireNonNull(periodFrom), Objects.requireNonNull(endAt));
-            TimeSeries[] forecastRates = createForecastRatesTimeSeries(responseData);
+            TimeSeries forecastRates = createForecastRatesTimeSeries(responseData);
 
-            logger.debug("Sending agile inc-VAT forecast to channel {} with {} entries", agileRatesUID,
-                    forecastRates[0].size());
-            logger.debug("Sending agile exc-VAT forecast to channel {} with {} entries", agileExRatesUID,
-                    forecastRates[1].size());
-            sendTimeSeries(agileRatesUID, Objects.requireNonNull(forecastRates[0]));
-            sendTimeSeries(agileExRatesUID, Objects.requireNonNull(forecastRates[1]));
+            logger.debug("Sending agile forecast to channel {} with {} entries", agileRatesUID, forecastRates.size());
+            sendTimeSeries(agileRatesUID, Objects.requireNonNull(forecastRates));
 
             // Update current state with the rate for the current half-hour slot
-            forecastRates[0].getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
+            forecastRates.getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
                     .ifPresent(entry -> updateState(agileRatesUID, entry.state()));
-            forecastRates[1].getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
-                    .ifPresent(entry -> updateState(agileExRatesUID, entry.state()));
         } catch (Exception e) {
             logger.debug("Failed to fetch agile forecast rates: {}", e.getMessage());
+        }
+    }
+
+    private void updateForecastExportRates() {
+        ChannelUID agileExportRatesUID = new ChannelUID(thing.getUID(), "agile#agileExportRates");
+
+        try {
+            Instant now = Instant.now();
+            Instant periodFrom = now.minus(30, ChronoUnit.MINUTES);
+            Instant endAt = now.plus(24, ChronoUnit.HOURS);
+            String effectiveRegion = config.agileRegion.isBlank() ? (accountRegion.isBlank() ? "A" : accountRegion)
+                    : config.agileRegion;
+            String responseData = connection.getPublicAgileExportRates(config.agileExportProductCode, effectiveRegion,
+                    Objects.requireNonNull(periodFrom), Objects.requireNonNull(endAt));
+            TimeSeries forecastRates = createForecastRatesTimeSeries(responseData);
+
+            logger.debug("Sending Agile OUTGOING forecast to channel {} with {} entries", agileExportRatesUID,
+                    forecastRates.size());
+            sendTimeSeries(agileExportRatesUID, Objects.requireNonNull(forecastRates));
+
+            forecastRates.getStates().filter(e -> !e.timestamp().isAfter(now)).reduce((first, second) -> second)
+                    .ifPresent(entry -> updateState(agileExportRatesUID, entry.state()));
+        } catch (Exception e) {
+            logger.debug("Failed to fetch Agile OUTGOING forecast rates: {}", e.getMessage());
+        }
+    }
+
+    void updateAllDailyRates() {
+        updateForecastRates();
+        updateForecastExportRates();
+        if (accountConfigured) {
+            updateCurrentTariffRates();
+            updateCurrentExportTariffRates();
+        }
+    }
+
+    void refreshAccountAndConsumption() {
+        if (!accountConfigured) {
+            return;
+        }
+        try {
+            queryAccountDetails();
+        } catch (Exception e) {
+            logger.debug("Failed to refresh account details: {}", e.getMessage());
+        }
+        updateConsumption(false);
+        if (hasExportMeter) {
+            updateConsumption(true);
+        }
+        updateCurrentTariffRates();
+        updateCurrentExportTariffRates();
+        if (!gasDeviceId.isEmpty()) {
+            updateGasConsumption();
+            updateGasTariffRates();
         }
     }
 
@@ -601,6 +683,7 @@ public class OctopusApiHandler extends BaseThingHandler {
                 updateConsumption(true);
             }
             updateCurrentTariffRates();
+            updateCurrentExportTariffRates();
             if (!gasDeviceId.isEmpty()) {
                 updateGasConsumption();
                 updateGasTariffRates();
@@ -608,6 +691,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         }
 
         updateForecastRates();
+        updateForecastExportRates();
     }
 
     /**
@@ -629,7 +713,7 @@ public class OctopusApiHandler extends BaseThingHandler {
             // Balance is in pence, convert to pounds
             double balancePence = account.get("balance").getAsDouble();
             double balancePounds = balancePence / 100.0;
-            updateState(new ChannelUID(thing.getUID(), "accountBalance"), new DecimalType(balancePounds));
+            updateState(new ChannelUID(thing.getUID(), "account#accountBalance"), new DecimalType(balancePounds));
             logger.debug("Account balance: \u00a3{}", String.format("%.2f", balancePounds));
         }
 
@@ -718,7 +802,31 @@ public class OctopusApiHandler extends BaseThingHandler {
 
             if (isExport) {
                 hasExportMeter = true;
+                // Store export MPAN and tariff data
+                if (meterPoint.has("mpan") && !meterPoint.get("mpan").isJsonNull()) {
+                    exportMpan = Objects.requireNonNull(meterPoint.get("mpan").getAsString());
+                    logger.debug("Export MPAN: {}", exportMpan);
+                }
+                if (tariff != null) {
+                    exportTariffData = tariff;
+                }
+                // Update export tariff channels
+                if (!tariffName.isEmpty()) {
+                    updateState(new ChannelUID(thing.getUID(), "electricity#exportTariffName"),
+                            new org.openhab.core.library.types.StringType(tariffName));
+                    logger.debug("Export tariff name: {}", tariffName);
+                }
+                if (!tariffDescription.isEmpty()) {
+                    updateState(new ChannelUID(thing.getUID(), "electricity#exportTariffDescription"),
+                            new org.openhab.core.library.types.StringType(tariffDescription));
+                    logger.debug("Export tariff description: {}", tariffDescription);
+                }
             } else {
+                // Store import MPAN
+                if (meterPoint.has("mpan") && !meterPoint.get("mpan").isJsonNull()) {
+                    importMpan = Objects.requireNonNull(meterPoint.get("mpan").getAsString());
+                    logger.debug("Import MPAN: {}", importMpan);
+                }
                 // Store electricity tariff data for rate updates
                 if (tariff != null) {
                     electricityTariffData = tariff;
@@ -730,17 +838,17 @@ public class OctopusApiHandler extends BaseThingHandler {
 
                 // Update electricity tariff channels for import meter
                 if (!tariffName.isEmpty()) {
-                    updateState(new ChannelUID(thing.getUID(), "electricityTariffName"),
+                    updateState(new ChannelUID(thing.getUID(), "electricity#electricityTariffName"),
                             new org.openhab.core.library.types.StringType(tariffName));
                     logger.debug("Electricity tariff name: {}", tariffName);
                 }
                 if (!tariffDescription.isEmpty()) {
-                    updateState(new ChannelUID(thing.getUID(), "electricityTariffDescription"),
+                    updateState(new ChannelUID(thing.getUID(), "electricity#electricityTariffDescription"),
                             new org.openhab.core.library.types.StringType(tariffDescription));
                     logger.debug("Electricity tariff description: {}", tariffDescription);
                 }
                 if (standingCharge > 0) {
-                    updateState(new ChannelUID(thing.getUID(), "electricityStandingCharge"),
+                    updateState(new ChannelUID(thing.getUID(), "electricity#electricityStandingCharge"),
                             new DecimalType(standingCharge));
                     logger.debug("Electricity standing charge: \u00a3{}", String.format("%.2f", standingCharge));
                 }
@@ -821,17 +929,17 @@ public class OctopusApiHandler extends BaseThingHandler {
 
             // Update gas tariff channels
             if (!tariffName.isEmpty()) {
-                updateState(new ChannelUID(thing.getUID(), "gasTariffName"),
+                updateState(new ChannelUID(thing.getUID(), "gas#gasTariffName"),
                         new org.openhab.core.library.types.StringType(tariffName));
                 logger.debug("Gas tariff name: {}", tariffName);
             }
             if (!tariffDescription.isEmpty()) {
-                updateState(new ChannelUID(thing.getUID(), "gasTariffDescription"),
+                updateState(new ChannelUID(thing.getUID(), "gas#gasTariffDescription"),
                         new org.openhab.core.library.types.StringType(tariffDescription));
                 logger.debug("Gas tariff description: {}", tariffDescription);
             }
             if (standingCharge > 0) {
-                updateState(new ChannelUID(thing.getUID(), "gasStandingCharge"), new DecimalType(standingCharge));
+                updateState(new ChannelUID(thing.getUID(), "gas#gasStandingCharge"), new DecimalType(standingCharge));
                 logger.debug("Gas standing charge: \u00a3{}", String.format("%.2f", standingCharge));
             }
 
@@ -881,7 +989,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         if (telemetryData.has("demand") && !telemetryData.get("demand").isJsonNull()) {
             double demandWatts = telemetryData.get("demand").getAsDouble();
             QuantityType<javax.measure.quantity.Power> demand = QuantityType.valueOf(demandWatts, Units.WATT);
-            updateState(new ChannelUID(thing.getUID(), "liveDemand"), demand);
+            updateState(new ChannelUID(thing.getUID(), "live#liveDemand"), demand);
             logger.debug("Updated liveDemand: {} W", demandWatts);
         } else {
             logger.debug("No demand data in telemetry");
@@ -891,7 +999,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         if (telemetryData.has("consumption") && !telemetryData.get("consumption").isJsonNull()) {
             double consumptionWh = telemetryData.get("consumption").getAsDouble();
             QuantityType<Energy> consumption = QuantityType.valueOf(consumptionWh / 1000.0, Units.KILOWATT_HOUR);
-            updateState(new ChannelUID(thing.getUID(), "liveMeterReading"), consumption);
+            updateState(new ChannelUID(thing.getUID(), "live#liveMeterReading"), consumption);
             logger.debug("Updated liveMeterReading: {} kWh", consumptionWh / 1000.0);
         } else {
             logger.debug("No consumption data in telemetry");
@@ -901,7 +1009,7 @@ public class OctopusApiHandler extends BaseThingHandler {
         if (telemetryData.has("export") && !telemetryData.get("export").isJsonNull()) {
             double exportWh = telemetryData.get("export").getAsDouble();
             QuantityType<Energy> export = QuantityType.valueOf(exportWh / 1000.0, Units.KILOWATT_HOUR);
-            updateState(new ChannelUID(thing.getUID(), "liveExportReading"), export);
+            updateState(new ChannelUID(thing.getUID(), "live#liveExportReading"), export);
             logger.debug("Updated liveExportReading: {} kWh", exportWh / 1000.0);
         } else {
             logger.debug("No export data in telemetry");

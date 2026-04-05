@@ -30,6 +30,12 @@
 				active Agile import product.</description>
 			<limitToOptions>true</limitToOptions>
 		</parameter>
+		<parameter name="agileExportProductCode" type="text" required="false">
+			<label>Agile Export Product Code</label>
+			<description>Optional Agile OUTGOING (export) product code (for example AGILE-OUTGOING-24-10-01). Leave blank to
+				auto-select latest active Agile OUTGOING product.</description>
+			<limitToOptions>true</limitToOptions>
+		</parameter>
 		<parameter name="agileRegion" type="text" required="false">
 			<label>Agile Region</label>
 			<description>Region code for the Agile tariff endpoint. Leave blank to auto-detect from your account tariff

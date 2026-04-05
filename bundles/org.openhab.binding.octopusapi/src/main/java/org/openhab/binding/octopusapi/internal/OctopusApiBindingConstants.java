@@ -31,5 +31,6 @@ public class OctopusApiBindingConstants {
 
     // Configuration parameter names
     public static final String CONFIG_AGILE_PRODUCT_CODE = "agileProductCode";
+    public static final String CONFIG_AGILE_EXPORT_PRODUCT_CODE = "agileExportProductCode";
     public static final String CONFIG_AGILE_REGION = "agileRegion";
 }

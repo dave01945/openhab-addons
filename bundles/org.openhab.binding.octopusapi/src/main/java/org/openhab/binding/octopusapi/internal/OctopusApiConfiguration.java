@@ -27,5 +27,6 @@ public class OctopusApiConfiguration {
     public String apiKey = "";
     public String accountNumber = "";
     public String agileProductCode = "";
+    public String agileExportProductCode = "";
     public String agileRegion = "";
 }
