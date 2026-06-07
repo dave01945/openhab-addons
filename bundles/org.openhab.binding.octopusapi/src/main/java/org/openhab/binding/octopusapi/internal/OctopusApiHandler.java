@@ -766,19 +766,24 @@ public class OctopusApiHandler extends BaseThingHandler {
                 }
             }
 
-            // Determine if this is import or export based on meter point
-            // Export meters will have smartExportElectricityMeter, import will have smartImportElectricityMeter
+            // Determine if this is import or export — use the tariff's isExport flag as the
+            // primary indicator, since the physical smart meter device is shared between
+            // import and export agreements and smartExportElectricityMeter may be null even
+            // for export meter points.
             boolean isExport = false;
+            if (tariff != null && tariff.has("isExport") && !tariff.get("isExport").isJsonNull()) {
+                isExport = tariff.get("isExport").getAsBoolean();
+                logger.debug("Agreement direction from tariff.isExport: {}", isExport ? "EXPORT" : "IMPORT");
+            }
             JsonArray meters = meterPoint.getAsJsonArray("meters");
 
             if (meters != null && meters.size() > 0) {
                 for (JsonElement meterElement : meters) {
                     JsonObject meter = meterElement.getAsJsonObject();
 
-                    // Check for export meter
+                    // Capture the device ID from the export smart meter if available
                     if (meter.has("smartExportElectricityMeter")
                             && !meter.get("smartExportElectricityMeter").isJsonNull()) {
-                        isExport = true;
                         JsonObject exportMeter = meter.getAsJsonObject("smartExportElectricityMeter");
                         if (exportMeter.has("deviceId") && !exportMeter.get("deviceId").isJsonNull()
                                 && electricityDeviceId.isEmpty()) {
